@@ -103,20 +103,20 @@ class Music(commands.Cog):
     async def help(self, ctx):
         embedM = discord.Embed(title="---Arif Music Commands--", color=0xfc0303)
         embedM.add_field(name="Arif.play", value="Arif plays music")
-        embedM.add_field(name="Arif.pause", value="Arif müziği keser")
-        embedM.add_field(name="Arif.disconnect", value="Arif odadan ayrılır.")
-        embedM.add_field(name="Arif.resume", value="Arif durmuş müziğe devam eder.")
-        embedM.add_field(name="Arif.join", value="Arif odaya gelir.")
+        embedM.add_field(name="Arif.pause", value="Arif stops music.")
+        embedM.add_field(name="Arif.disconnect", value="Arif leaves voice channel.")
+        embedM.add_field(name="Arif.resume", value="Arif continues stopped music.")
+        embedM.add_field(name="Arif.join", value="Arif joins voice channel.")
         await ctx.send(content=None, embed=embedM)
 
-    @commands.command(name="volume", help="Müziği sesini artırır ve azaltır.", aliases=["Ses"],
+    @commands.command(name="volume", help="Increase or decrease voice volume.", aliases=["Ses"],
                       invoke_without_command=True)
     async def volume(self, ctx, volume: int):
         if ctx.voice_client is None:
-            await  ctx.send("Kanala bağlanmadım ki.")
+            await  ctx.send("No connected voice channel.")
 
         ctx.voice_client.source.volume = volume / 100
-        await ctx.send(f"Müzik sesi şuan {volume}%")
+        await ctx.send(f"Music volume now  {volume}%")
 
     @commands.command(name="Skip")
     async def skip(self, ctx):
