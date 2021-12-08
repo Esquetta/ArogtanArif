@@ -48,10 +48,10 @@ class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="join", help="Arif odaya gelir fakat müzik çalmaz.", aliases=["katıl"], pass_context=True)
+    @commands.command(name="join", help="Arif connects a voice channel.", aliases=["katıl"], pass_context=True)
     async def join(self, ctx):
         if ctx.author.voice is None:
-            await  ctx.send("Sesli kanala geçin.")
+            await  ctx.send("Connect a voice channel.")
         voice_channel = ctx.author.voice.channel
 
         if ctx.voice_client is None:
@@ -59,12 +59,12 @@ class Music(commands.Cog):
         else:
             await  ctx.voice_client.move_to(voice_channel)
 
-    @commands.command("disconnect", help="Arif odadan ayrılır", aliases=["ayrıl"], pass_context=True)
+    @commands.command("disconnect", help="Arif leaves voice channel", aliases=["ayrıl"], pass_context=True)
     async def disconnect(self, ctx):
         await  ctx.voice_client.disconnect()
-        await  ctx.send("Odadan ayrılırdı. ")
+        await  ctx.send("Disconnected!")
 
-    @commands.command(name="play", help="Arif müzik çalar.", aliases=["oynat"], pass_context=True, no_pm=True)
+    @commands.command(name="play", help="Arif plays a music.", aliases=["oynat"], pass_context=True, no_pm=True)
     async def play(self, ctx, *, url):
 
         try:
@@ -75,38 +75,38 @@ class Music(commands.Cog):
                 player = await YTDLSource.from_url(url, loop=self.bot.loop)
                 ctx.voice_client.play(player, after=lambda e: print(f'Player error: {e}') if e else None)
 
-            await ctx.send(f'Şimdi oynatılıyor: {player.title}')
+            await ctx.send(f'Now Playing: {player.title}')
         except ClientException:
             async with ctx.typing():
                 player = await YTDLSource.from_url(url, loop=self.bot.loop)
                 ctx.voice_client.play(player, after=lambda e: print(f'Player error: {e}') if e else None)
 
-            await ctx.send(f'Şimdi oynatılıyor: {player.title}')
+            await ctx.send(f'Now Playing: {player.title}')
 
-    @commands.command(name="pause", help="Arif müziği durdurur.", aliases=["durdur"], pass_context=True)
+    @commands.command(name="pause", help="Arif stops music.", aliases=["durdur"], pass_context=True)
     async def pause(self, ctx):
         if ctx.voice_client.is_playing():
-            await  ctx.send("Durduruldu. ▶")
+            await  ctx.send("Stopped. ▶")
             await  ctx.voice_client.pause()
         else:
-            await  ctx.send("Çalan müzik yokki durdurasın.")
+            await  ctx.send("There is no music so you can't stop it.")
 
-    @commands.command(name="resume", help="Arif durmuş olan müziğe  devam eder.", aliases=["devam"], pass_context=True)
+    @commands.command(name="resume", help="Arif continues stopped music.", aliases=["devam"], pass_context=True)
     async def resume(self, ctx):
         if ctx.voice_client.pause:
-            await ctx.send("Devam ediliyor. ⏩")
+            await ctx.send("In progress. ⏩")
             await ctx.voice_client.resume()
         else:
-            await  ctx.send("Müzik durmadıki devam ettiresin.")
+            await  ctx.send("There is no paused music so you cant resume it.")
 
-    @commands.command(name="Help", help="Arifin Müzik Komutları", aliases=["yardım"])
+    @commands.command(name="Help", help="Arifin Music Commands", aliases=["cmdsupport"])
     async def help(self, ctx):
-        embedM = discord.Embed(title="---Arif Müzik Komutları---", color=0xfc0303)
-        embedM.add_field(name="Arif.oynat", value="Arif müzik çalar")
-        embedM.add_field(name="Arif.durdur", value="Arif müziği keser")
-        embedM.add_field(name="Arif.ayrıl", value="Arif odadan ayrılır.")
-        embedM.add_field(name="Arif.devam", value="Arif durmuş müziğe devam eder.")
-        embedM.add_field(name="Arif.katıl", value="Arif odaya gelir.")
+        embedM = discord.Embed(title="---Arif Music Commands--", color=0xfc0303)
+        embedM.add_field(name="Arif.play", value="Arif müzik çalar")
+        embedM.add_field(name="Arif.pause", value="Arif müziği keser")
+        embedM.add_field(name="Arif.disconnect", value="Arif odadan ayrılır.")
+        embedM.add_field(name="Arif.resume", value="Arif durmuş müziğe devam eder.")
+        embedM.add_field(name="Arif.join", value="Arif odaya gelir.")
         await ctx.send(content=None, embed=embedM)
 
     @commands.command(name="volume", help="Müziği sesini artırır ve azaltır.", aliases=["Ses"],
