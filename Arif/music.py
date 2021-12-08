@@ -102,7 +102,7 @@ class Music(commands.Cog):
     @commands.command(name="Help", help="Arifin Music Commands", aliases=["cmdsupport"])
     async def help(self, ctx):
         embedM = discord.Embed(title="---Arif Music Commands--", color=0xfc0303)
-        embedM.add_field(name="Arif.play", value="Arif müzik çalar")
+        embedM.add_field(name="Arif.play", value="Arif plays music")
         embedM.add_field(name="Arif.pause", value="Arif müziği keser")
         embedM.add_field(name="Arif.disconnect", value="Arif odadan ayrılır.")
         embedM.add_field(name="Arif.resume", value="Arif durmuş müziğe devam eder.")
