@@ -107,6 +107,7 @@ class Music(commands.Cog):
         embedM.add_field(name="Arif.disconnect", value="Arif leaves voice channel.")
         embedM.add_field(name="Arif.resume", value="Arif continues stopped music.")
         embedM.add_field(name="Arif.join", value="Arif joins voice channel.")
+        embedM.add_field(name="Arif.volume", value="Arif increases or decreases voice volume.")
         await ctx.send(content=None, embed=embedM)
 
     @commands.command(name="volume", help="Increase or decrease voice volume.", aliases=["Ses"],
