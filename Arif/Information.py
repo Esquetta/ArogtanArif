@@ -28,6 +28,33 @@ class Information(commands.Cog):
             embedInfo.add_field(name=name, value=value, inline=inline)
 
         await  ctx.send(embed=embedInfo)
+    @commands.command(name="SvInfo",help="Shows server info.",aliales=["svinfo"])
+    async  def server_info(self,ctx):
+        embed=discord.Embed(title="Server Information",colour=ctx.guild.owner.colour,timestamp=datetime.datetime.utcnow())
+        statuses=[len(list(filter(lambda m: str(m.status)=="online",ctx.guild.members))),
+                  len(list(filter(lambda m: str(m.status) == "idle", ctx.guild.members))),
+                  len(list(filter(lambda m: str(m.status) == "dnd", ctx.guild.members))),
+                  len(list(filter(lambda m: str(m.status) == "offline", ctx.guild.members)))
+                  ]
+        fields=[("ID",ctx.guild.id,True),
+                ("Owner",ctx.guild.owner,True),
+                ("Region", ctx.guild.region, True),
+                ("Created at", ctx.guild.created_at.strftime("d%/%m/%y &H:%M%S"), True),
+                ("Members", len(ctx.guild.members), True),
+                ("Humans", len(list(filter(lambda m: not m.bot,ctx.guild.members))), True),
+                ("Banned Users", len(ctx.guild.bans()), True),
+                ("Statuses",f":green_circle: {statuses[0] :orange_circle:{statuses[1]}:red_circle:{statuses[2]} :white_circle:{statuses[3]}}", True),
+                ("Text Channels", len(ctx.guild.text_channels), True),
+                ("Voice Channels", len(ctx.guild.stage_channels), True),
+                ("Roles",len(ctx.guild.roles),True),
+                ("Categories", len(ctx.guild.categories), True),
+                ("Invites",len(ctx.guild.invites),True)
+                ]
+            for name,value,inline in fields:
+                embed.add_field(name=name, value=value, inline=inline)
+            await ctx.send(embed=embed)
+
+
 
 def setup(client):
     client.add_cog(Information(client))
