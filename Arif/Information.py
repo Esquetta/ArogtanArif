@@ -48,20 +48,21 @@ class Information(commands.Cog):
                   ("Created at", ctx.guild.created_at.strftime("%d.%m.%Y %H:%M:%S"), True),
                   ("Members", len(ctx.guild.members), True),
                   ("Humans", len(list(filter(lambda m: not m.bot, ctx.guild.members))), True),
-                  ("Humans", len(list(filter(lambda m:m.bot, ctx.guild.members))), True),
+                  ("Bots", len(list(filter(lambda m:m.bot, ctx.guild.members))), True),
                   ("Banned Users", len(await ctx.guild.bans()), True),
                   ("Statuses",
                    f":green_circle: {statuses[0]} :orange_circle:{statuses[1]} :red_circle:{statuses[2]} :white_circle:{statuses[3]}",
                    True),
                   ("Text Channels", len(ctx.guild.text_channels), True),
-                  ("Voice Channels", len(ctx.guild.stage_channels), True),
-                  ("Roles", len(ctx.guild.roles), True),
+                  ("Voice Channels", len(ctx.guild.voice_channels), True),
+                  ("Roles Count", len(ctx.guild.roles), True),
                   ("Categories", len(ctx.guild.categories), True),
-                  ("Invites", len(await ctx.guild.invites()), True)
+                  ("Invites", len(await ctx.guild.invites()), True),
+                  ("\u200b","\u200b",True)
                   ]
         for name, value, inline in fields:
             embed.add_field(name=name, value=value, inline=inline)
-
+        embed.add_field(name="Roles",value=",@".join([str(i.name) for i in ctx.guild.roles]))
         await ctx.send(embed=embed)
 
 
