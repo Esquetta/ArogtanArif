@@ -69,6 +69,7 @@ class Music(commands.Cog):
 
         try:
             voice_channel = ctx.author.voice.channel
+
             await  voice_channel.connect()
 
             async with ctx.typing():
