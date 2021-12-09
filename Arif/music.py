@@ -83,6 +83,8 @@ class Music(commands.Cog):
 
             await ctx.send(f'Now Playing: {player.title}')
 
+
+
     @commands.command(name="pause", help="Arif stops music.", aliases=["durdur"], pass_context=True)
     async def pause(self, ctx):
         if ctx.voice_client.is_playing():
