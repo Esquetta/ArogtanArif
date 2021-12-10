@@ -51,7 +51,7 @@ class Music(commands.Cog):
     @commands.command(name="join", help="Arif connects a voice channel.", aliases=["katıl"], pass_context=True)
     async def join(self, ctx):
         if ctx.author.voice is None:
-            await  ctx.send("Connect a voice channel.")
+            await  ctx.send("You must be connected a voice channel for use this command.")
         voice_channel = ctx.author.voice.channel
 
         if ctx.voice_client is None:
@@ -61,15 +61,19 @@ class Music(commands.Cog):
 
     @commands.command("disconnect", help="Arif leaves voice channel", aliases=["ayrıl"], pass_context=True)
     async def disconnect(self, ctx):
-        await  ctx.voice_client.disconnect()
-        await  ctx.send("Disconnected!")
+        try:
+            await  ctx.voice_client.disconnect()
+            await  ctx.send("Disconnected!")
+        except AttributeError:
+            await  ctx.send("I can't disconnect because I'm not connected to an voice channel.")
 
     @commands.command(name="play", help="Arif plays a music.", aliases=["oynat"], pass_context=True, no_pm=True)
     async def play(self, ctx, *, url):
 
+        if ctx.author.voice is None:
+            await  ctx.send("Connect a voice channel.")
         try:
             voice_channel = ctx.author.voice.channel
-
             await  voice_channel.connect()
 
             async with ctx.typing():
@@ -84,33 +88,34 @@ class Music(commands.Cog):
 
             await ctx.send(f'Now Playing: {player.title}')
 
-
-
     @commands.command(name="pause", help="Arif stops music.", aliases=["durdur"], pass_context=True)
     async def pause(self, ctx):
-        if ctx.voice_client.is_playing():
-            await  ctx.send("Stopped. ▶")
-            await  ctx.voice_client.pause()
-        else:
+        try:
+            if ctx.voice_client.is_playing():
+                await  ctx.send("Stopped. ▶")
+                await  ctx.voice_client.pause()
+        except AttributeError:
             await  ctx.send("There is no music so you can't stop it.")
+
 
     @commands.command(name="resume", help="Arif continues stopped music.", aliases=["devam"], pass_context=True)
     async def resume(self, ctx):
-        if ctx.voice_client.pause:
-            await ctx.send("In progress. ⏩")
-            await ctx.voice_client.resume()
-        else:
+        try:
+            if ctx.voice_client.is_playing() or ctx.voice_client.is_paused():
+                await ctx.send("In progress. ⏩")
+                await ctx.voice_client.resume()
+        except AttributeError:
             await  ctx.send("There is no paused music so you cant resume it.")
 
     @commands.command(name="Help", help="Arifin Music Commands", aliases=["cmdsupport"])
     async def help(self, ctx):
         embedM = discord.Embed(title="---Arif Music Commands--", color=0xfc0303)
-        embedM.add_field(name="Arif.play", value="Arif plays music")
-        embedM.add_field(name="Arif.pause", value="Arif stops music.")
-        embedM.add_field(name="Arif.disconnect", value="Arif leaves voice channel.")
-        embedM.add_field(name="Arif.resume", value="Arif continues stopped music.")
-        embedM.add_field(name="Arif.join", value="Arif joins voice channel.")
-        embedM.add_field(name="Arif.volume", value="Arif increases or decreases voice volume.")
+        embedM.add_field(name="Arif.play", value="Arif plays music", inline=True)
+        embedM.add_field(name="Arif.pause", value="Arif stops music.", inline=True)
+        embedM.add_field(name="Arif.disconnect", value="Arif leaves voice channel.", inline=True)
+        embedM.add_field(name="Arif.resume", value="Arif continues stopped music.", inline=True)
+        embedM.add_field(name="Arif.join", value="Arif joins voice channel.", inline=True)
+        embedM.add_field(name="Arif.volume", value="Arif increases or decreases voice volume.", inline=True)
         await ctx.send(content=None, embed=embedM)
 
     @commands.command(name="volume", help="Increase or decrease voice volume.", aliases=["Ses"],

@@ -9,7 +9,7 @@ class Information(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="userinfo", aliases=["memberinfo"])
+    @commands.command(name="userinfo",help="Show specifieded user info. ",aliases=["memberinfo"])
     async def user_info(self, ctx, user: Optional[Member]):
         user = user or ctx.author
         embedInfo = discord.Embed(title="User Information", colour=user.guild.owner.colour,
