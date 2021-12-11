@@ -43,6 +43,7 @@ class Information(commands.Cog):
                     len(list(filter(lambda m: str(m.status) == "offline", ctx.guild.members)))
                     ]
         fields = [("ID", ctx.guild.id, True),
+                  ("Name",ctx.guild.name,True),
                   ("Owner", ctx.guild.owner, True),
                   ("Region", ctx.guild.region, True),
                   ("Created at", ctx.guild.created_at.strftime("%d.%m.%Y %H:%M:%S"), True),
