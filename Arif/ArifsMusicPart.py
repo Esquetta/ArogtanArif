@@ -2,10 +2,11 @@ import discord
 from discord.ext import commands
 import music
 import  Information
+import  Logs
 from flaskserver import live
 
 token = "ODc3NTM3NDI0ODAzMjM3OTY4.YR0EaQ.Vcr0dPUg81B1XBAGEhGgJCWsSqo"
-cogs = [music,Information]
+cogs = [music,Information,Logs]
 intents = discord.Intents().all()
 client = commands.Bot(command_prefix='Arif.', intents=intents)
 
