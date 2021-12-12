@@ -11,7 +11,7 @@ class Logs(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        self.log_channel_id=0
+        self.log_channel_id = 0
         self.log_channel = self.bot.get_channel(self.log_channel_id)
 
     @commands.command(name="setupLogChannel", help="Creates log chanel with everyone can see and writes text messages.",
@@ -23,7 +23,7 @@ class Logs(commands.Cog):
         overwrites = {ctx.guild.default_role: discord.PermissionOverwrite(read_messages=True),
                       ctx.guild.me: discord.PermissionOverwrite(read_messages=True)}
         log_channel = await  ctx.guild.create_text_channel('Logs', overwrites=overwrites)
-        self.log_channel_id=log_channel.id
+        self.log_channel_id = log_channel.id
         self.log_channel = self.bot.get_channel(self.log_channel_id)
         await  ctx.send("Setup completed.")
 
@@ -66,12 +66,29 @@ class Logs(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, before, after):
         if not after.author.bot:
-            pass
+            if before.content != after.content:
+                embed = Embed(title="Message update", description="Message updates", colour=after.author.colour,
+                              timestamp=datetime.datetime.utcnow())
+                fields = [("Edited By:",f"@{before.author}", True),
+                        ("Before:", before.content, True),
+                          ("After:", after.content, True)]
+
+                for name, value, inline in fields:
+                    embed.add_field(name=name, value=value, inline=inline)
+                await self.log_channel.send(embed=embed)
 
     @commands.Cog.listener()
-    async def on_message_delete(self, before, after):
-        if not after.author.bot:
-            pass
+    async def on_message_delete(self,message):
+        if not message.author.bot:
+            embed = Embed(title="Message update", description="Message updates", colour=message.author.colour,
+                          timestamp=datetime.datetime.utcnow())
+            fields = [("Deleted By:", f"@{message.author}", True),
+                      ("Content:", message.content, True)
+                      ]
+
+            for name, value, inline in fields:
+                embed.add_field(name=name, value=value, inline=inline)
+            await self.log_channel.send(embed=embed)
 
 
 def setup(client):
