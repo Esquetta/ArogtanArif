@@ -14,7 +14,7 @@ class Logs(commands.Cog):
         self.log_channel_id = 0
         self.log_channel = self.bot.get_channel(self.log_channel_id)
 
-    @commands.command(name="setupLogChannel", help="Creates log chanel with everyone can see and writes text messages.",
+    @commands.command(name="setupLogChannel", help="Creates log chanel with everyone can see and writes text messages",
                       aliales=["setlogChannel", "LogChannelSetup"])
     async def setup_log_channel(self, ctx):
         for channel in ctx.guild.text_channels:

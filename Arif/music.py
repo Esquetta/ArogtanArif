@@ -107,17 +107,6 @@ class Music(commands.Cog):
         except AttributeError:
             await  ctx.send("There is no paused music so you cant resume it.")
 
-    @commands.command(name="Help", help="Arifin Music Commands", aliases=["cmdsupport"])
-    async def help(self, ctx):
-        embedM = discord.Embed(title="---Arif Music Commands--", color=0xfc0303)
-        embedM.add_field(name="Arif.play", value="Arif plays music", inline=True)
-        embedM.add_field(name="Arif.pause", value="Arif stops music.", inline=True)
-        embedM.add_field(name="Arif.disconnect", value="Arif leaves voice channel.", inline=True)
-        embedM.add_field(name="Arif.resume", value="Arif continues stopped music.", inline=True)
-        embedM.add_field(name="Arif.join", value="Arif joins voice channel.", inline=True)
-        embedM.add_field(name="Arif.volume", value="Arif increases or decreases voice volume.", inline=True)
-        await ctx.send(content=None, embed=embedM)
-
     @commands.command(name="volume", help="Increase or decrease voice volume.", aliases=["Ses"],
                       invoke_without_command=True)
     async def volume(self, ctx, volume: int):
