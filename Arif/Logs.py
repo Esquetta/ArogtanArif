@@ -11,10 +11,10 @@ class Logs(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        self.log_channel_id=None
+        self.log_channel_id=0
         self.log_channel = self.bot.get_channel(self.log_channel_id)
 
-    @commands.command(name="setupLogChannel", help="Define log channel with channel id",
+    @commands.command(name="setupLogChannel", help="Creates log chanel with everyone can see and writes text messages.",
                       aliales=["setlogChannel", "LogChannelSetup"])
     async def setup_log_channel(self, ctx):
         for channel in ctx.guild.text_channels:
@@ -24,13 +24,13 @@ class Logs(commands.Cog):
                       ctx.guild.me: discord.PermissionOverwrite(read_messages=True)}
         log_channel = await  ctx.guild.create_text_channel('Logs', overwrites=overwrites)
         self.log_channel_id=log_channel.id
+        self.log_channel = self.bot.get_channel(self.log_channel_id)
         await  ctx.send("Setup completed.")
 
     @commands.Cog.listener()
     async def on_user_update(self, before, after):
-        self.log_channel=self.bot.get_channel(self.log_channel_id)
         if before.avatar_url != after.avatar_url:
-            embed = Embed(title="Member update", description="Avatar Change  =>Is old one", colour=after.colour,
+            embed = Embed(title="Member update", description="Avatar Change  This is old one =>", colour=after.colour,
                           timestamp=datetime.datetime.utcnow())
             embed.set_thumbnail(url=before.avatar_url)
             embed.set_image(url=after.avatar_url)
@@ -42,7 +42,6 @@ class Logs(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
-        self.log_channel = self.bot.get_channel(self.log_channel_id)
         if before.display_name != after.display_name:
             embed = Embed(title="Member update", description="Nickname Change", colour=after.colour,
                           timestamp=datetime.datetime.utcnow())
