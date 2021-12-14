@@ -1,7 +1,7 @@
 import datetime
 from typing import Optional
 import discord
-from discord import Member
+from discord import Member, Embed
 from discord.ext import commands
 
 
@@ -9,7 +9,7 @@ class Information(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="userinfo",help="Show specifieded user info. ",aliases=["memberinfo"])
+    @commands.command(name="userinfo", help="Show specifieded user info. ", aliases=["userinfo"])
     async def user_info(self, ctx, user: Optional[Member]):
         user = user or ctx.author
         embedInfo = discord.Embed(title="User Information", colour=user.guild.owner.colour,
@@ -43,13 +43,13 @@ class Information(commands.Cog):
                     len(list(filter(lambda m: str(m.status) == "offline", ctx.guild.members)))
                     ]
         fields = [("ID", ctx.guild.id, True),
-                  ("Name",ctx.guild.name,True),
+                  ("Name", ctx.guild.name, True),
                   ("Owner", ctx.guild.owner, True),
                   ("Region", ctx.guild.region, True),
                   ("Created at", ctx.guild.created_at.strftime("%d.%m.%Y %H:%M:%S"), True),
                   ("Members", len(ctx.guild.members), True),
                   ("Humans", len(list(filter(lambda m: not m.bot, ctx.guild.members))), True),
-                  ("Bots", len(list(filter(lambda m:m.bot, ctx.guild.members))), True),
+                  ("Bots", len(list(filter(lambda m: m.bot, ctx.guild.members))), True),
                   ("Banned Users", len(await ctx.guild.bans()), True),
                   ("Statuses",
                    f":green_circle: {statuses[0]} :orange_circle:{statuses[1]} :red_circle:{statuses[2]} :white_circle:{statuses[3]}",
@@ -59,12 +59,95 @@ class Information(commands.Cog):
                   ("Roles Count", len(ctx.guild.roles), True),
                   ("Categories", len(ctx.guild.categories), True),
                   ("Invites", len(await ctx.guild.invites()), True),
-                  ("\u200b","\u200b",True)
+                  ("\u200b", "\u200b", True)
                   ]
         for name, value, inline in fields:
             embed.add_field(name=name, value=value, inline=inline)
-        embed.add_field(name="Roles",value=",@".join([str(i.name) for i in ctx.guild.roles]))
+        embed.add_field(name="Roles", value=",@".join([str(i.name) for i in ctx.guild.roles]))
         await ctx.send(embed=embed)
+
+    @commands.group(invoke_without_command=True)
+    async def help(self,ctx):
+        embed = Embed(title="Commands ", description="Arif Commands List ", colour=ctx.author.colour,
+                      timestamp=datetime.datetime.utcnow())
+        embed.set_author(name='Help')
+        fields = [("Music", "play,pause,resume,join,disconnect", True),
+                  ("User", "userinfo or memberinfo,Svinfo or Svinfo", True),
+                  ("Log", "setupLogChannel or LogChannelSetup  creates log text channel", True),
+                  ("More", "Arif.help 'command name' extented help with specified command.", "True")
+                  ]
+
+        for name, value, inline in fields:
+            embed.add_field(name=name, value=value, inline=inline)
+        await  ctx.send(embed=embed)
+
+    @help.command(name="play")
+    async def play(self,ctx):
+        embed = Embed(title="Play", description="Play usage", colour=ctx.author.colour,
+                      timestamp=datetime.datetime.utcnow())
+        embed.set_author(name="Play")
+        embed.add_field(name="Exp", value="Arif.play or Arif.sing 'youtube link'", inline=True)
+        await  ctx.send(embed=embed)
+
+    @help.command(name="pause")
+    async def pause(self, ctx):
+        embed = Embed(title="Pause", description="Pause usage", colour=ctx.author.colour,
+                      timestamp=datetime.datetime.utcnow())
+        embed.set_author(name="Pause")
+        embed.add_field(name="Exp", value="Arif.pause or Arif.stop", inline=True)
+        embed.add_field(name="Return", value="Bot returns message if music paused successfully.", inline=True)
+        await  ctx.send(embed=embed)
+
+    @help.command(name="resume")
+    async def resume(self, ctx):
+        embed = Embed(title="Resume", description="Resume usage", colour=ctx.author.colour,
+                      timestamp=datetime.datetime.utcnow())
+        embed.set_author(name="Resume")
+        embed.add_field(name="Exp", value="Arif.resume", inline=True)
+        embed.add_field(name="Return", value="Bot returns message if music resumed successfully.", inline=True)
+        await  ctx.send(embed=embed)
+
+    @help.command(name="disconnect")
+    async def disconnect(self, ctx):
+        embed = Embed(title="disconnect", description="Disconnect usage", colour=ctx.author.colour,
+                      timestamp=datetime.datetime.utcnow())
+        embed.set_author(name="Disconnect")
+        embed.add_field(name="Exp", value="Arif.disconnect or Arif.leave", inline=True)
+        embed.add_field(name="Return", value="Bot leaves from voice channel.", inline=True)
+        await  ctx.send(embed=embed)
+
+    @help.command(name="userinfo")
+    async def user_info(self, ctx):
+        embed = Embed(title="userinfo", description="userinfo usage", colour=ctx.author.colour,
+                      timestamp=datetime.datetime.utcnow())
+        embed.set_author(name="Disconnect")
+        embed.add_field(name="Exp", value="Arif.userinfo or Arif.memberinfo", inline=True)
+        embed.add_field(name="Return", value="If you dont give a user (Arif.userinfo) return your account information.", inline=True)
+        embed.add_field(name="Return", value="If you dont give a user (Arif.userinfo @Me) return specified user  account information.",
+                        inline=True)
+        await  ctx.send(embed=embed)
+
+    @help.command(name="SvInfo")
+    async def sv_Info(self, ctx):
+        embed = Embed(title="SvInfo", description="svinfo usage", colour=ctx.author.colour,
+                      timestamp=datetime.datetime.utcnow())
+        embed.set_author(name="SvInfo")
+        embed.add_field(name="Exp", value="Arif.SvInfo or Arif.vInfo", inline=True)
+        embed.add_field(name="Return", value="If you dont give a user (Arif.SvInfo) return your server information.",
+                        inline=True)
+        await  ctx.send(embed=embed)
+
+    @help.command(name="setupLogChannel")
+    async def setupLogChannel(self, ctx):
+        embed = Embed(title="setupLogChannel", description="setupLogChannel usage", colour=ctx.author.colour,
+                      timestamp=datetime.datetime.utcnow())
+        embed.set_author(name="Disconnect")
+        embed.add_field(name="Exp", value="Arif.SvInfo or Arif.vInfo", inline=True)
+        embed.add_field(name="Info", value="Arif creates named log channel and userprofle,username,message edit,message delete all this triggered sends log channel.(Everyone can see and write this channel)",
+                        inline=True)
+        await  ctx.send(embed=embed)
+
+
 
 
 def setup(client):

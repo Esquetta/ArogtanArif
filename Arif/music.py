@@ -59,7 +59,7 @@ class Music(commands.Cog):
         else:
             await  ctx.voice_client.move_to(voice_channel)
 
-    @commands.command("disconnect", help="Arif leaves voice channel", aliases=["ayrıl"], pass_context=True)
+    @commands.command("disconnect", help="Arif leaves voice channel", aliases=["leave"], pass_context=True)
     async def disconnect(self, ctx):
         try:
             await  ctx.voice_client.disconnect()
@@ -67,7 +67,7 @@ class Music(commands.Cog):
         except AttributeError:
             await  ctx.send("I can't disconnect because I'm not connected to an voice channel.")
 
-    @commands.command(name="play", help="Arif plays a music.", aliases=["oynat"], pass_context=True, no_pm=True)
+    @commands.command(name="play", help="Arif plays a music.", aliases=["sing"], pass_context=True, no_pm=True)
     async def play(self, ctx, *, url):
 
         if ctx.author.voice is None:
@@ -88,7 +88,7 @@ class Music(commands.Cog):
 
             await ctx.send(f'Now Playing: {player.title}')
 
-    @commands.command(name="pause", help="Arif stops music.", aliases=["durdur"], pass_context=True)
+    @commands.command(name="pause", help="Arif stops music.", aliases=["stop"], pass_context=True)
     async def pause(self, ctx):
         try:
             if ctx.voice_client.is_playing():
@@ -96,7 +96,6 @@ class Music(commands.Cog):
                 await  ctx.voice_client.pause()
         except AttributeError:
             await  ctx.send("There is no music so you can't stop it.")
-
 
     @commands.command(name="resume", help="Arif continues stopped music.", aliases=["devam"], pass_context=True)
     async def resume(self, ctx):
@@ -107,7 +106,7 @@ class Music(commands.Cog):
         except AttributeError:
             await  ctx.send("There is no paused music so you cant resume it.")
 
-    @commands.command(name="volume", help="Increase or decrease voice volume.", aliases=["Ses"],
+    @commands.command(name="volume", help="Increase or decrease voice volume.", aliases=["sound"],
                       invoke_without_command=True)
     async def volume(self, ctx, volume: int):
         if ctx.voice_client is None:
