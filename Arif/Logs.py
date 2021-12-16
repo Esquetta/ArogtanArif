@@ -21,20 +21,21 @@ class Logs(commands.Cog):
                       aliales=["setlogChannel", "LogChannelSetup"])
     async def setup_log_channel(self, ctx):
         channel = Get_Server(id=ctx.guild.id)
-        if len(channel) <= 0:
+        if len(channel)>0:
             await ctx.send("Already created log channnel")
         else:
             overwrites = {ctx.guild.default_role: discord.PermissionOverwrite(read_messages=True),
                           ctx.guild.me: discord.PermissionOverwrite(read_messages=True)}
             log_channel = await  ctx.guild.create_text_channel('Logs', overwrites=overwrites)
             Server = Servers()
-            LogChannel = LogChannels()
+
             Server.ServerId = ctx.guild.id
             Server.ServerName = ctx.guild.name
             Set_Server(Server=Server)
             server = Get_SvInfo(svId=ctx.guild.id)
+            LogChannel = LogChannels()
             LogChannel.ChanelId = log_channel.id
-            LogChannel.ServerDbId = server[0]
+            LogChannel.ServerDbId = server[0][0]
             Set_LogChannel(LogChannel)
             await  ctx.send("Setup completed.")
 
