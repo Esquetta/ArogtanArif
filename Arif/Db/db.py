@@ -43,7 +43,7 @@ def Set_LogChannel(LogChannel=LogChannels()):
     if Server is not None:
         try:
             cursor.execute(f"insert into LogChannels(ChannelId,ServerDbId) values({LogChannel.ChanelId},{LogChannel.ServerDbId})")
-            print("New server added db")
+            print("Log channel  added db")
             con.commit()
 
         except Exception:
