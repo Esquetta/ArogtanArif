@@ -2,7 +2,10 @@ import datetime
 import discord
 from discord import Embed
 from discord.ext import commands
-from discord.ext.commands import UserInputError
+
+from Db.Entities.Servers import Servers
+from Db.db import Set_Server, Get_Server, Set_LogChannel, Get_SvInfo
+from Db.Entities.LogChannels import LogChannels
 
 
 class Logs(commands.Cog):
@@ -17,15 +20,23 @@ class Logs(commands.Cog):
     @commands.command(name="setupLogChannel", help="Creates log chanel with everyone can see and writes text messages",
                       aliales=["setlogChannel", "LogChannelSetup"])
     async def setup_log_channel(self, ctx):
-        for channel in ctx.guild.text_channels:
-            if channel.name == "log":
-                await  ctx.send("Channel exist.")
-        overwrites = {ctx.guild.default_role: discord.PermissionOverwrite(read_messages=True),
-                      ctx.guild.me: discord.PermissionOverwrite(read_messages=True)}
-        log_channel = await  ctx.guild.create_text_channel('Logs', overwrites=overwrites)
-        self.log_channel_id = log_channel.id
-        self.log_channel = self.bot.get_channel(self.log_channel_id)
-        await  ctx.send("Setup completed.")
+        channel = Get_Server(id=ctx.guild.id)
+        if len(channel) <= 0:
+            await ctx.send("Already created log channnel")
+        else:
+            overwrites = {ctx.guild.default_role: discord.PermissionOverwrite(read_messages=True),
+                          ctx.guild.me: discord.PermissionOverwrite(read_messages=True)}
+            log_channel = await  ctx.guild.create_text_channel('Logs', overwrites=overwrites)
+            Server = Servers()
+            LogChannel = LogChannels()
+            Server.ServerId = ctx.guild.id
+            Server.ServerName = ctx.guild.name
+            Set_Server(Server=Server)
+            server = Get_SvInfo(svId=ctx.guild.id)
+            LogChannel.ChanelId = log_channel.id
+            LogChannel.ServerDbId = server[0]
+            Set_LogChannel(LogChannel)
+            await  ctx.send("Setup completed.")
 
     @commands.Cog.listener()
     async def on_user_update(self, before, after):
@@ -34,11 +45,8 @@ class Logs(commands.Cog):
                           timestamp=datetime.datetime.utcnow())
             embed.set_thumbnail(url=before.avatar_url)
             embed.set_image(url=after.avatar_url)
-            try:
-                await self.log_channel.send(embed=embed)
-            except AttributeError as attributeError:
-                await  self.bot.guild.text_channels[0].send(
-                    "You need to specified text channel.exp:Arif.setLogChannel 'your channel id here' (right click text channel copy id) ")
+
+            await self.log_channel.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
@@ -69,8 +77,8 @@ class Logs(commands.Cog):
             if before.content != after.content:
                 embed = Embed(title="Message update", description="Message updates", colour=after.author.colour,
                               timestamp=datetime.datetime.utcnow())
-                fields = [("Edited By:",f"@{before.author}", True),
-                        ("Before:", before.content, True),
+                fields = [("Edited By:", f"@{before.author}", True),
+                          ("Before:", before.content, True),
                           ("After:", after.content, True)]
 
                 for name, value, inline in fields:
@@ -78,7 +86,7 @@ class Logs(commands.Cog):
                 await self.log_channel.send(embed=embed)
 
     @commands.Cog.listener()
-    async def on_message_delete(self,message):
+    async def on_message_delete(self, message):
         if not message.author.bot:
             embed = Embed(title="Message update", description="Message updates", colour=message.author.colour,
                           timestamp=datetime.datetime.utcnow())

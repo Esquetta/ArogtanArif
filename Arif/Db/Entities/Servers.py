@@ -1,4 +1,4 @@
 class Servers:
-    Id: int()
-    ServerId: int()
+    Id=int()
+    ServerId=int()
     ServerName = ""
