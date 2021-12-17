@@ -14,7 +14,7 @@ class Logs(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        self.log_channel_id = 0
+        self.log_channel_id =None
         self.log_channel = self.bot.get_channel(self.log_channel_id)
 
     @commands.command(name="setupLogChannel", help="Creates log chanel with everyone can see and writes text messages",
@@ -37,6 +37,8 @@ class Logs(commands.Cog):
             LogChannel.ChanelId = log_channel.id
             LogChannel.ServerDbId = server[0][0]
             Set_LogChannel(LogChannel)
+            self.log_channel_id=log_channel.id
+            self.log_channel=log_channel
             await  ctx.send("Setup completed.")
 
     @commands.Cog.listener()
