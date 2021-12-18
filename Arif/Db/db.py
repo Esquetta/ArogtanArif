@@ -42,7 +42,8 @@ def Set_Server(Server=Servers()):
 def Set_LogChannel(LogChannel=LogChannels()):
     if Server is not None:
         try:
-            cursor.execute(f"insert into LogChannels(ChannelId,ServerDbId) values({LogChannel.ChanelId},{LogChannel.ServerDbId})")
+            cursor.execute(
+                f"insert into LogChannels(ChannelId,ServerDbId) values({LogChannel.ChanelId},{LogChannel.ServerDbId})")
             print("Log channel  added db")
             con.commit()
 
@@ -57,3 +58,19 @@ def Get_SvInfo(svId: int):
         f"Select * from Servers Where ServerId={svId}")
     values = cursor.fetchall()
     return values
+
+
+def Get_LogChannel(ChannelId: int):
+    cursor.execute(f"Select * from  LogChannels where ChannelId={ChannelId}")
+    values = cursor.fetchall()
+    return values
+
+
+def Delete_Sv(dbId: int):
+    cursor.execute(f"Delete from Servers Where Id={dbId}")
+    cursor.commit()
+
+
+def Delete_LogChannel(ChannelId: int):
+    cursor.execute(f"Delete from LogChannels Where ChannelId={ChannelId}")
+    cursor.commit()

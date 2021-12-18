@@ -4,7 +4,7 @@ from discord import Embed
 from discord.ext import commands
 
 from Db.Entities.Servers import Servers
-from Db.db import Set_Server, Get_Server, Set_LogChannel, Get_SvInfo
+from Db.db import Set_Server, Get_Server, Set_LogChannel, Get_SvInfo, Get_LogChannel, Delete_LogChannel, Delete_Sv
 from Db.Entities.LogChannels import LogChannels
 
 
@@ -100,6 +100,16 @@ class Logs(commands.Cog):
             for name, value, inline in fields:
                 embed.add_field(name=name, value=value, inline=inline)
             await self.log_channel.send(embed=embed)
+    @commands.Cog.listener()
+    async def on_guild_channel_delete(self,channel):
+        channel_Db=Get_LogChannel(channel.id)
+        if len(channel_Db)>0:
+            Delete_LogChannel(channel.id)
+            Delete_Sv(channel_Db[0][2])
+        else:
+            print("This channel is not log channel.")
+
+
 
 
 def setup(client):
