@@ -74,7 +74,9 @@ class Information(commands.Cog):
         fields = [("Music", "play,pause,resume,join,disconnect", True),
                   ("User", "userinfo or memberinfo,Svinfo or Svinfo", True),
                   ("Log", "setupLogChannel or LogChannelSetup  creates log text channel", True),
-                  ("More", "Arif.help 'command name' extented help with specified command.", "True")
+                  ("Game", "Rock-Paper-Scissors", "True"),
+                  ("More", "Arif.help 'command name' extented help with specified command.", "True"),
+
                   ]
 
         for name, value, inline in fields:
@@ -144,6 +146,17 @@ class Information(commands.Cog):
         embed.set_author(name="Disconnect")
         embed.add_field(name="Exp", value="Arif.SvInfo or Arif.vInfo", inline=True)
         embed.add_field(name="Info", value="Arif creates named log channel and userprofle,username,message edit,message delete all this triggered sends log channel.(Everyone can see and write this channel)",
+                        inline=True)
+        await  ctx.send(embed=embed)
+
+    @help.command(name="RockPaperScissors")
+    async def setupLogChannel(self, ctx):
+        embed = Embed(title="Rock-Paper-Scissors", description="Rock-Paper-Scissors usage", colour=ctx.author.colour,
+                      timestamp=datetime.datetime.utcnow())
+        embed.set_author(name="Game")
+        embed.add_field(name="Exp", value="Arif.SvInfo or Arif.vInfo", inline=True)
+        embed.add_field(name="Info",
+                        value="Arif.RockPaperScissors 'and your choice' after bot return choices and who is winner.",
                         inline=True)
         await  ctx.send(embed=embed)
 
