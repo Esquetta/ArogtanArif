@@ -1,8 +1,11 @@
 import asyncio
+import datetime
+
 import discord
 import youtube_dl
 from discord import ClientException
 from discord.ext import commands
+from discord import Embed
 
 youtube_dl.utils.bug_reports_message = lambda: ''
 
@@ -79,14 +82,28 @@ class Music(commands.Cog):
             async with ctx.typing():
                 player = await YTDLSource.from_url(url, loop=self.bot.loop)
                 ctx.voice_client.play(player, after=lambda e: print(f'Player error: {e}') if e else None)
-
-            await ctx.send(f'Now Playing: {player.title}')
+                embed = Embed(title="Now Playing", colour=ctx.guild.owner.colour,
+                              timestamp=datetime.datetime.utcnow())
+                embed.set_thumbnail(url=player.data["thumbnail"])
+                fields = [("Now playing", f"{player.title}", True),
+                          ("Requested by:", ctx.author.mention, True),
+                          ("Url", player.url, False)]
+                for name, value, inline in fields:
+                    embed.add_field(name=name, value=value, inline=inline)
+            await ctx.send(embed=embed)
         except ClientException:
             async with ctx.typing():
                 player = await YTDLSource.from_url(url, loop=self.bot.loop)
                 ctx.voice_client.play(player, after=lambda e: print(f'Player error: {e}') if e else None)
-
-            await ctx.send(f'Now Playing: {player.title}')
+                embed = Embed(title="Now Playing", colour=ctx.guild.owner.colour,
+                              timestamp=datetime.datetime.utcnow())
+                embed.set_thumbnail(url=player.data["thumbnail"])
+                fields = [("Now playing", f"{player.title}", True),
+                          ("Requested by:",ctx.author.name.mention, False),
+                          ("Url", player.url, False)]
+                for name, value, inline in fields:
+                    embed.add_field(name=name, value=value, inline=inline)
+            await ctx.send(embed=embed)
 
     @commands.command(name="pause", help="Arif stops music.", aliases=["stop"], pass_context=True)
     async def pause(self, ctx):

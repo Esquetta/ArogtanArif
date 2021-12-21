@@ -9,7 +9,7 @@ class Information(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="userinfo", help="Show specifieded user info. ", aliases=["userinfo"])
+    @commands.command(name="Userinfo", help="Show specified user info. ", aliases=["MemberInfo"])
     async def user_info(self, ctx, user: Optional[Member]):
         user = user or ctx.author
         embedInfo = discord.Embed(title="User Information", colour=user.guild.owner.colour,
@@ -119,7 +119,7 @@ class Information(commands.Cog):
         await  ctx.send(embed=embed)
 
     @help.command(name="userinfo")
-    async def user_info(self, ctx):
+    async def user_Info(self, ctx):
         embed = Embed(title="userinfo", description="userinfo usage", colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
         embed.set_author(name="Disconnect")
