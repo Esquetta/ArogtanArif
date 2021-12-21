@@ -1,9 +1,8 @@
+from discord import Embed
 from discord.ext import commands
 import random
 
 choices = ["Rock", "Paper", "Scissors"]
-
-
 
 
 class Game(commands.Cog):
@@ -14,7 +13,7 @@ class Game(commands.Cog):
     async def Rock_Paper_Scissors(self, ctx, choice: str):
         bot_choice = random.choice(choices)
         await  ctx.send(f"My choice {bot_choice} ")
-        user_choice=choice.capitalize()
+        user_choice = choice.capitalize()
         if not user_choice.isdigit():
             if user_choice in choices:
                 if user_choice == bot_choice:
@@ -38,6 +37,15 @@ class Game(commands.Cog):
                 await ctx.send("You must chose Rock-Paper-Scissors.")
         else:
             await ctx.send("You must chose Rock-Paper-Scissors.")
+
+    @commands.command(name="CoinFlip",aliases=["coinflip"])
+    async def CoinFlip(self, ctx):
+        if random.randint(0, 1) == 0:
+            embed=Embed(title="CoinFlip",description=f"{ctx.author.mention} Flipped coin, we got **Heads**!")
+            await ctx.send(embed=embed)
+        else:
+            embed = Embed(title="CoinFlip", description=f"{ctx.author.mention} Flipped coin, we got **Tails**!")
+            await ctx.send(embed=embed)
 
 
 def setup(client):

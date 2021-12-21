@@ -150,15 +150,16 @@ class Information(commands.Cog):
         await  ctx.send(embed=embed)
 
     @help.command(name="RockPaperScissors")
-    async def setupLogChannel(self, ctx):
+    async def RockPaperScissor(self, ctx):
         embed = Embed(title="Rock-Paper-Scissors", description="Rock-Paper-Scissors usage", colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
         embed.set_author(name="Game")
-        embed.add_field(name="Exp", value="Arif.SvInfo or Arif.vInfo", inline=True)
+        embed.add_field(name="Exp", value="Arif.RockPaperScissors", inline=True)
         embed.add_field(name="Info",
-                        value="Arif.RockPaperScissors 'and your choice' after bot return choices and who is winner.",
+                        value="Arif.RockPaperScissors 'and your choice' after bot return his choice and who is winner.",
                         inline=True)
         await  ctx.send(embed=embed)
+
 
 
 
