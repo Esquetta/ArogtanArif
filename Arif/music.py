@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import time
 
 import discord
 import youtube_dl
@@ -51,7 +52,17 @@ class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="join", help="Arif connects a voice channel.", aliases=["katıl"], pass_context=True)
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        if not member.bot and after.channel is None:
+            if not [m for m in before.channel.members if not m.bot]:
+                voice = discord.utils.get(self.bot.voice_clients)
+                channel = discord.utils.get(self.bot.get_channel(), guild__name=f'{voice.guild}')
+                time.sleep(1)
+                await voice.disconnect()
+                await channel.channels[0].send("Disconnected from channel because of inactivity.")
+
+    @commands.command(name="join", help="Arif connects a voice channel.", aliases=["connect"], pass_context=True)
     async def join(self, ctx):
         if ctx.author.voice is None:
             await  ctx.send("You must be connected a voice channel for use this command.")
@@ -75,6 +86,8 @@ class Music(commands.Cog):
 
         if ctx.author.voice is None:
             await  ctx.send("Connect a voice channel.")
+        embed = Embed(title="Now Playing", colour=ctx.guild.owner.colour,
+                      timestamp=datetime.datetime.utcnow())
         try:
             voice_channel = ctx.author.voice.channel
             await  voice_channel.connect()
@@ -82,12 +95,12 @@ class Music(commands.Cog):
             async with ctx.typing():
                 player = await YTDLSource.from_url(url, loop=self.bot.loop)
                 ctx.voice_client.play(player, after=lambda e: print(f'Player error: {e}') if e else None)
-                embed = Embed(title="Now Playing", colour=ctx.guild.owner.colour,
-                              timestamp=datetime.datetime.utcnow())
+
                 embed.set_thumbnail(url=player.data["thumbnail"])
                 fields = [("Now playing", f"{player.title}", True),
                           ("Requested by:", ctx.author.mention, True),
-                          ("Url", player.url, False)]
+                          ("Author:",f"{player.data['channel']}", True),
+                          ]
                 for name, value, inline in fields:
                     embed.add_field(name=name, value=value, inline=inline)
             await ctx.send(embed=embed)
@@ -95,11 +108,9 @@ class Music(commands.Cog):
             async with ctx.typing():
                 player = await YTDLSource.from_url(url, loop=self.bot.loop)
                 ctx.voice_client.play(player, after=lambda e: print(f'Player error: {e}') if e else None)
-                embed = Embed(title="Now Playing", colour=ctx.guild.owner.colour,
-                              timestamp=datetime.datetime.utcnow())
                 embed.set_thumbnail(url=player.data["thumbnail"])
                 fields = [("Now playing", f"{player.title}", True),
-                          ("Requested by:",ctx.author.name.mention, False),
+                          ("Requested by:", ctx.author.name.mention, False),
                           ("Url", player.url, False)]
                 for name, value, inline in fields:
                     embed.add_field(name=name, value=value, inline=inline)
