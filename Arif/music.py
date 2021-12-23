@@ -7,6 +7,7 @@ import youtube_dl
 from discord import ClientException
 from discord.ext import commands
 from discord import Embed
+from youtube_dl import DownloadError
 
 youtube_dl.utils.bug_reports_message = lambda: ''
 
@@ -57,7 +58,7 @@ class Music(commands.Cog):
         if not member.bot and after.channel is None:
             if not [m for m in before.channel.members if not m.bot]:
                 voice = discord.utils.get(self.bot.voice_clients)
-                channel = discord.utils.get(self.bot.get_channel(), guild__name=f'{voice.guild}')
+                channel = discord.utils.get(self.bot.get_all_channels(), guild__name=f'{voice.guild}')
                 time.sleep(1)
                 await voice.disconnect()
                 await channel.channels[0].send("Disconnected from channel because of inactivity.")
@@ -99,7 +100,7 @@ class Music(commands.Cog):
                 embed.set_thumbnail(url=player.data["thumbnail"])
                 fields = [("Now playing", f"{player.title}", True),
                           ("Requested by:", ctx.author.mention, True),
-                          ("Author:",f"{player.data['channel']}", True),
+                          ("Author:", f"{player.data['channel']}", True),
                           ]
                 for name, value, inline in fields:
                     embed.add_field(name=name, value=value, inline=inline)
@@ -115,8 +116,10 @@ class Music(commands.Cog):
                 for name, value, inline in fields:
                     embed.add_field(name=name, value=value, inline=inline)
             await ctx.send(embed=embed)
+        except DownloadError:
+            await ctx.send("Unsupported URL")
 
-    @commands.command(name="pause", help="Arif stops music.", aliases=["stop"], pass_context=True)
+    @commands.command(name="pause", help="Arif stops music.", pass_context=True)
     async def pause(self, ctx):
         try:
             if ctx.voice_client.is_playing():
@@ -138,10 +141,12 @@ class Music(commands.Cog):
                       invoke_without_command=True)
     async def volume(self, ctx, volume: int):
         if ctx.voice_client is None:
-            await  ctx.send("No connected voice channel.")
+            return await ctx.send("Not connected to a voice channel.")
+        elif ctx.voice_client is not None and not ctx.voice_client.is_playing():
+            return await ctx.send("There no playing music here.")
 
         ctx.voice_client.source.volume = volume / 100
-        await ctx.send(f"Music volume now  {volume}%")
+        await ctx.send(f"Changed volume to {volume}%")
 
     @commands.command(name="Skip")
     async def skip(self, ctx):
