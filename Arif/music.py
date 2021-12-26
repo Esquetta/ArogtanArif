@@ -56,6 +56,17 @@ class YTDLSource(discord.PCMVolumeTransformer):
         return cls(discord.FFmpegPCMAudio(data['url']), data=data)
 
 
+class MusicPlayer:
+    __slots__ = ('bot', 'guild', 'channel', 'cog', 'queue', 'next', 'current', 'volume')
+
+    def __init__(self, ctx):
+        self.bot = ctx.bot
+        self.guild = ctx.guild
+        self.cog = ctx.god
+        self.queue = asyncio.Queue()
+        self.next = asyncio.Event()
+
+
 class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -105,10 +116,12 @@ class Music(commands.Cog):
 
             async with ctx.typing():
                 player = await YTDLSource.from_url(url, loop=self.bot.loop)
-                ctx.voice_client.play(player, after=lambda e: print(f'Player error: {e}') if e else None)
-                embed.set_thumbnail(url=player.data["thumbnail"])
-                fields = [("Music", f"{player.title}", True),
-                          ("Author:", f"{player.data['channel']}", True),
+                await  self.queue.put(player)
+                music= await self.queue.get()
+                ctx.voice_client.play(music, after=lambda e: print(f'Player error: {e}') if e else None)
+                embed.set_thumbnail(url=music.data["thumbnail"])
+                fields = [("Music", f"{music.title}", True),
+                          ("Author:", f"{music.data['channel']}", True),
                           ]
                 for name, value, inline in fields:
                     embed.add_field(name=name, value=value, inline=inline)
@@ -116,10 +129,12 @@ class Music(commands.Cog):
         except ClientException:
             async with ctx.typing():
                 player = await YTDLSource.from_url(url, loop=self.bot.loop)
-                ctx.voice_client.play(player, after=lambda e: print(f'Player error: {e}') if e else None)
-                embed.set_thumbnail(url=player.data["thumbnail"])
-                fields = [("Music", f"{player.title}", True),
-                          ("Author:", f"{player.data['channel']}", True),
+                await  self.queue.put(player)
+                music = await self.queue.get()
+                ctx.voice_client.play(music, after=lambda e: print(f'Player error: {e}') if e else None)
+                embed.set_thumbnail(url= music.data["thumbnail"])
+                fields = [("Music", f"{music.title}", True),
+                          ("Author:", f"{music.data['channel']}", True),
                           ]
                 for name, value, inline in fields:
                     embed.add_field(name=name, value=value, inline=inline)
