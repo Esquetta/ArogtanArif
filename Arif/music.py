@@ -2,9 +2,9 @@ import asyncio
 import datetime
 import time
 
+import async_timeout
 import discord
 import youtube_dl
-from discord import ClientException
 from discord.ext import commands
 from discord import Embed
 import discord.errors
@@ -57,7 +57,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
 
 class MusicPlayer:
-    __slots__ = ('bot', 'guild', 'channel', 'cog', 'queue', 'next', 'current', 'volume')
+    __slots__ = ('bot', 'guild', 'channel', 'cog', 'queue', 'next', 'current', 'volume', 'now_Playing')
 
     def __init__(self, ctx):
         self.bot = ctx.bot
@@ -65,6 +65,7 @@ class MusicPlayer:
         self.cog = ctx.god
         self.queue = asyncio.Queue()
         self.next = asyncio.Event()
+        self.now_Playing = None
 
 
 class Music(commands.Cog):
@@ -113,26 +114,32 @@ class Music(commands.Cog):
         try:
             voice_channel = ctx.author.voice.channel
             await  voice_channel.connect()
-
-            async with ctx.typing():
-                player = await YTDLSource.from_url(url, loop=self.bot.loop)
-                await  self.queue.put(player)
-                music= await self.queue.get()
-                ctx.voice_client.play(music, after=lambda e: print(f'Player error: {e}') if e else None)
-                embed.set_thumbnail(url=music.data["thumbnail"])
-                fields = [("Music", f"{music.title}", True),
-                          ("Author:", f"{music.data['channel']}", True),
-                          ]
-                for name, value, inline in fields:
-                    embed.add_field(name=name, value=value, inline=inline)
-            await ctx.send(embed=embed)
-        except ClientException:
+            if not ctx.voice_client.is_playing():
+                embed = Embed(title="", colour=ctx.guild.owner.colour,
+                              timestamp=datetime.datetime.utcnow())
+                embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url)
+                async with ctx.typing():
+                    player = await YTDLSource.from_url(url, loop=self.bot.loop)
+                    await  self.queue.put(player)
+                    music = await self.queue.get()
+                    ctx.voice_client.play(music, after=lambda e: print(f'Player error: {e}') if e else None)
+                    embed.set_thumbnail(url=music.data["thumbnail"])
+                    fields = [("Music", f"{music.title}", True),
+                              ("Author:", f"{music.data['channel']}", True),
+                              ]
+                    for name, value, inline in fields:
+                        embed.add_field(name=name, value=value, inline=inline)
+                await ctx.send(embed=embed)
+        except discord.ClientException:
             async with ctx.typing():
                 player = await YTDLSource.from_url(url, loop=self.bot.loop)
                 await  self.queue.put(player)
                 music = await self.queue.get()
                 ctx.voice_client.play(music, after=lambda e: print(f'Player error: {e}') if e else None)
-                embed.set_thumbnail(url= music.data["thumbnail"])
+                embed = Embed(title="Added Queue", colour=ctx.guild.owner.colour,
+                              timestamp=datetime.datetime.utcnow())
+                embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url)
+                embed.set_thumbnail(url=music.data["thumbnail"])
                 fields = [("Music", f"{music.title}", True),
                           ("Author:", f"{music.data['channel']}", True),
                           ]
@@ -141,6 +148,14 @@ class Music(commands.Cog):
             await ctx.send(embed=embed)
         except DownloadError:
             await ctx.send("Unsupported URL")
+        except PermissionError:
+            await ctx.send("I'dont have permission this voice channel.")
+        while not self.bot.is_closed():
+            try:
+                async with async_timeout.timeout(300):
+                    source = await self.queue.get()
+            except asyncio.TimeoutError:
+                return ctx.voice_client.disconnect()
 
     @commands.command(name="pause", help="Arif stops music.", pass_context=True)
     async def pause(self, ctx):
@@ -182,10 +197,16 @@ class Music(commands.Cog):
 
     @commands.command(name="Skip")
     async def skip(self, ctx):
-        if ctx.voice_client.is_playing():
-            await  ctx.voice_client.skip()
-        else:
-            await ctx.send("Müzik yokki abi geçeyim.")
+        if not ctx.voice_client or not ctx.voice_client.is_connected():
+            return await ctx.send('I am not currently playing anything!', delete_after=20)
+
+        if ctx.voice_client.is_paused():
+            pass
+        elif not ctx.voice_client.is_playing():
+            return
+
+        ctx.voice_client.stop()
+        await ctx.send(f'**`{ctx.author}`**: Skipped the song!')
 
 
 def setup(client):
