@@ -137,22 +137,21 @@ class Music(commands.Cog):
         try:
             voice_channel = ctx.author.voice.channel
             await  voice_channel.connect()
-            if not ctx.voice_client.is_playing():
-                embed = Embed(title="", colour=ctx.guild.owner.colour,
-                              timestamp=datetime.datetime.utcnow())
-                embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url)
-                async with ctx.typing():
-                    player = await YTDLSource.from_url(url, loop=self.bot.loop)
-                    await  self.queue.put(player)
-                    music = await self.queue.get()
-                    ctx.voice_client.play(music, after=lambda e: print(f'Player error: {e}') if e else None)
-                    embed.set_thumbnail(url=music.data["thumbnail"])
-                    fields = [("Music", f"{music.title}", True),
-                              ("Author:", f"{music.data['channel']}", True),
-                              ]
-                    for name, value, inline in fields:
-                        embed.add_field(name=name, value=value, inline=inline)
-                await ctx.send(embed=embed)
+            embed = Embed(title="", colour=ctx.guild.owner.colour,
+                          timestamp=datetime.datetime.utcnow())
+            embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url)
+            async with ctx.typing():
+                player = await YTDLSource.from_url(url, loop=self.bot.loop)
+                await self.queue.put(player)
+                music = await self.queue.get()
+                ctx.voice_client.play(player, after=lambda e: print(f'Player error: {e}') if e else None)
+                embed.set_thumbnail(url=player.data["thumbnail"])
+                fields = [("Music", f"{player.title}", True),
+                          ("Author:", f"{player.data['channel']}", True),
+                          ]
+                for name, value, inline in fields:
+                    embed.add_field(name=name, value=value, inline=inline)
+            await ctx.send(embed=embed)
         except discord.ClientException:
             async with ctx.typing():
                 player = await YTDLSource.from_url(url, loop=self.bot.loop)
@@ -161,17 +160,17 @@ class Music(commands.Cog):
                 embed = Embed(title="Added Queue", colour=ctx.guild.owner.colour,
                               timestamp=datetime.datetime.utcnow())
                 embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url)
-                embed.set_thumbnail(url=music.data["thumbnail"])
-                fields = [("Music", f"{music.title}", True),
-                          ("Author:", f"{music.data['channel']}", True),
+                embed.set_thumbnail(url=player.data["thumbnail"])
+                fields = [("Music", f"{player.title}", True),
+                          ("Author:", f"{player.data['channel']}", True),
                           ]
                 for name, value, inline in fields:
                     embed.add_field(name=name, value=value, inline=inline)
                 await ctx.send(embed=embed)
-
-                async with timeout(300):
+                async  with timeout(300):
                     ctx.voice_client.play(music, after=lambda e: print(f'Player error: {e}') if e else None)
-                    return
+                return
+
         except DownloadError:
             await ctx.send("Unsupported URL")
         except PermissionError:
@@ -190,16 +189,17 @@ class Music(commands.Cog):
         except TypeError:
             pass
 
-    @commands.command(name="resume", help="Arif continues stopped music.", aliases=["devam"], pass_context=True)
-    async def resume(self, ctx):
-        try:
-            if ctx.voice_client.is_paused():
-                await ctx.send("In progress. ⏩")
-                await ctx.voice_client.resume()
-        except AttributeError:
-            await  ctx.send("There is no paused music so you cant resume it.")
-        except TypeError:
-            pass
+
+@commands.command(name="resume", help="Arif continues stopped music.", aliases=["devam"], pass_context=True)
+async def resume(self, ctx):
+    try:
+        if ctx.voice_client.is_paused():
+            await ctx.send("In progress. ⏩")
+            await ctx.voice_client.resume()
+    except AttributeError:
+        await  ctx.send("There is no paused music so you cant resume it.")
+    except TypeError:
+        pass
 
     @commands.command(name="volume", help="Increase or decrease voice volume.", aliases=["sound"],
                       invoke_without_command=True)
