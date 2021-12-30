@@ -1,8 +1,9 @@
 import asyncio
 import datetime
+import itertools
 import time
 
-import async_timeout
+from async_timeout import timeout
 import discord
 import youtube_dl
 from discord.ext import commands
@@ -66,6 +67,28 @@ class MusicPlayer:
         self.queue = asyncio.Queue()
         self.next = asyncio.Event()
         self.now_Playing = None
+        self.current = None
+        ctx.bot.loop.create_task(self.player_loop())
+
+    async def player_loop(self):
+        await  self.bot.wait_until_ready()
+        while not self.bot.is_closed():
+            self.next.clear()
+            try:
+                async with timeout(300):
+                    source = await self.queue.get()
+            except asyncio.TimeoutError:
+                return self.guild.destroy(self.guild)
+            if not isinstance(source, YTDLSource):
+                try:
+                    source = YTDLSource.regather_stream(source, loop=self.bot.loop)
+                except Exception as ex:
+                    await self.channel.send(f"Error f'```css\n[{ex}]\n```'")
+                    continue
+            self.volume = self.volume
+            self.current = source
+
+            self.guild.voice_client.play(source, after=lambda e: print(f'Player error: {e}') if e else None)
 
 
 class Music(commands.Cog):
@@ -135,7 +158,6 @@ class Music(commands.Cog):
                 player = await YTDLSource.from_url(url, loop=self.bot.loop)
                 await  self.queue.put(player)
                 music = await self.queue.get()
-                ctx.voice_client.play(music, after=lambda e: print(f'Player error: {e}') if e else None)
                 embed = Embed(title="Added Queue", colour=ctx.guild.owner.colour,
                               timestamp=datetime.datetime.utcnow())
                 embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url)
@@ -145,17 +167,15 @@ class Music(commands.Cog):
                           ]
                 for name, value, inline in fields:
                     embed.add_field(name=name, value=value, inline=inline)
-            await ctx.send(embed=embed)
+                await ctx.send(embed=embed)
+
+                async with timeout(300):
+                    ctx.voice_client.play(music, after=lambda e: print(f'Player error: {e}') if e else None)
+                    return
         except DownloadError:
             await ctx.send("Unsupported URL")
         except PermissionError:
             await ctx.send("I'dont have permission this voice channel.")
-        while not self.bot.is_closed():
-            try:
-                async with async_timeout.timeout(300):
-                    source = await self.queue.get()
-            except asyncio.TimeoutError:
-                return ctx.voice_client.disconnect()
 
     @commands.command(name="pause", help="Arif stops music.", pass_context=True)
     async def pause(self, ctx):
@@ -207,6 +227,14 @@ class Music(commands.Cog):
 
         ctx.voice_client.stop()
         await ctx.send(f'**`{ctx.author}`**: Skipped the song!')
+
+    @commands.command(name="QueueInfo")
+    async def queue_Info(self, ctx):
+        upcoming = list(itertools.islice(await self.queue.get(), 0, 5))
+        info = "\n".join(f'**`{_["title"]}`**' for _ in upcoming)
+        embed = Embed(title="Queue Info", colour=ctx.guild.owner.colour,
+                      timestamp=datetime.datetime.utcnow(), description=info)
+        await ctx.send(embed=embed)
 
 
 def setup(client):
