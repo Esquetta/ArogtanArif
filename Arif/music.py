@@ -143,7 +143,6 @@ class Music(commands.Cog):
             async with ctx.typing():
                 player = await YTDLSource.from_url(url, loop=self.bot.loop)
                 await self.queue.put(player)
-                music = await self.queue.get()
                 ctx.voice_client.play(player, after=lambda e: print(f'Player error: {e}') if e else None)
                 embed.set_thumbnail(url=player.data["thumbnail"])
                 fields = [("Music", f"{player.title}", True),
@@ -156,7 +155,6 @@ class Music(commands.Cog):
             async with ctx.typing():
                 player = await YTDLSource.from_url(url, loop=self.bot.loop)
                 await  self.queue.put(player)
-                music = await self.queue.get()
                 embed = Embed(title="Added Queue", colour=ctx.guild.owner.colour,
                               timestamp=datetime.datetime.utcnow())
                 embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url)
@@ -168,9 +166,7 @@ class Music(commands.Cog):
                     embed.add_field(name=name, value=value, inline=inline)
                 await ctx.send(embed=embed)
                 async  with timeout(300):
-                    ctx.voice_client.play(music, after=lambda e: print(f'Player error: {e}') if e else None)
-                return
-
+                    ctx.voice_client.play(player, after=lambda e: print(f'Player error: {e}') if e else None)
         except DownloadError:
             await ctx.send("Unsupported URL")
         except PermissionError:
@@ -189,41 +185,40 @@ class Music(commands.Cog):
         except TypeError:
             pass
 
-
-@commands.command(name="resume", help="Arif continues stopped music.", aliases=["devam"], pass_context=True)
-async def resume(self, ctx):
-    try:
-        if ctx.voice_client.is_paused():
-            await ctx.send("In progress. ⏩")
-            await ctx.voice_client.resume()
-    except AttributeError:
-        await  ctx.send("There is no paused music so you cant resume it.")
-    except TypeError:
-        pass
+    @commands.command(name="resume", help="Arif continues stopped music.", aliases=["devam"], pass_context=True)
+    async def resume(self, ctx):
+        try:
+            if ctx.voice_client.is_paused():
+                await ctx.send("In progress. ⏩")
+                await ctx.voice_client.resume()
+        except AttributeError:
+            await  ctx.send("There is no paused music so you cant resume it.")
+        except TypeError:
+            pass
 
     @commands.command(name="volume", help="Increase or decrease voice volume.", aliases=["sound"],
-                      invoke_without_command=True)
+                          invoke_without_command=True)
     async def volume(self, ctx, volume: str):
         if volume.isdigit():
             if ctx.voice_client is None:
                 return await ctx.send("Not connected to a voice channel.")
             elif ctx.voice_client is not None and not ctx.voice_client.is_playing():
                 return await ctx.send("There no playing music here.")
-
+            else:
+                await ctx.send(
+                    "You must enter number(not decimals) value for this, but be carefull dont fuck your ears.")
             ctx.voice_client.source.volume = int(volume) / 100
             await ctx.send(f"Changed volume to {volume}%")
-        else:
-            await ctx.send("You must enter number(not decimals) value for this, but be carefull dont fuck your ears.")
 
     @commands.command(name="Skip")
     async def skip(self, ctx):
         if not ctx.voice_client or not ctx.voice_client.is_connected():
-            return await ctx.send('I am not currently playing anything!', delete_after=20)
+             return await ctx.send('I am not currently playing anything!', delete_after=20)
 
         if ctx.voice_client.is_paused():
-            pass
+             pass
         elif not ctx.voice_client.is_playing():
-            return
+             return
 
         ctx.voice_client.stop()
         await ctx.send(f'**`{ctx.author}`**: Skipped the song!')
@@ -233,7 +228,7 @@ async def resume(self, ctx):
         upcoming = list(itertools.islice(await self.queue.get(), 0, 5))
         info = "\n".join(f'**`{_["title"]}`**' for _ in upcoming)
         embed = Embed(title="Queue Info", colour=ctx.guild.owner.colour,
-                      timestamp=datetime.datetime.utcnow(), description=info)
+                          timestamp=datetime.datetime.utcnow(), description=info)
         await ctx.send(embed=embed)
 
 
