@@ -6,6 +6,7 @@ from discord.ext import commands
 from Db.Entities.Servers import Servers
 from Db.db import Set_Server, Get_Server, Set_LogChannel, Get_SvInfo, Get_LogChannel, Delete_LogChannel, Delete_Sv
 from Db.Entities.LogChannels import LogChannels
+from discord.utils import find
 
 
 class Logs(commands.Cog):
@@ -14,14 +15,18 @@ class Logs(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        self.log_channel_id =None
+        '''channel=Get_Server(id=self.bot.guild.id)
+        if len(channel>0):
+            self.log_channel_id=channel[0][3]
+            print(f"Log Channel Found {self.bot.guild.name}")'''
+        self.log_channel_id = None
         self.log_channel = self.bot.get_channel(self.log_channel_id)
 
     @commands.command(name="setupLogChannel", help="Creates log chanel with everyone can see and writes text messages",
                       aliales=["setlogChannel", "LogChannelSetup"])
     async def setup_log_channel(self, ctx):
         channel = Get_Server(id=ctx.guild.id)
-        if len(channel)>0:
+        if len(channel) > 0:
             await ctx.send("Already created log channnel")
         else:
             overwrites = {ctx.guild.default_role: discord.PermissionOverwrite(read_messages=True),
@@ -37,8 +42,8 @@ class Logs(commands.Cog):
             LogChannel.ChanelId = log_channel.id
             LogChannel.ServerDbId = server[0][0]
             Set_LogChannel(LogChannel)
-            self.log_channel_id=log_channel.id
-            self.log_channel=log_channel
+            self.log_channel_id = log_channel.id
+            self.log_channel = log_channel
             await  ctx.send("Setup completed.")
 
     @commands.Cog.listener()
@@ -100,16 +105,29 @@ class Logs(commands.Cog):
             for name, value, inline in fields:
                 embed.add_field(name=name, value=value, inline=inline)
             await self.log_channel.send(embed=embed)
+
     @commands.Cog.listener()
-    async def on_guild_channel_delete(self,channel):
-        channel_Db=Get_LogChannel(channel.id)
-        if len(channel_Db)>0:
+    async def on_guild_channel_delete(self, channel):
+        channel_Db = Get_LogChannel(channel.id)
+        if len(channel_Db) > 0:
             Delete_LogChannel(channel.id)
             Delete_Sv(channel_Db[0][2])
         else:
             print("This channel is not log channel.")
 
-
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild):
+        try:
+            cli = self.bot
+            ctx = cli.get_context
+            general = find(lambda x: x.name == 'general' or 'genel', guild.text_channels)
+            if general:
+                if general and general.permissions_for(guild.me).send_messages:
+                    await self.bot.guild.text_channels[0].send(
+                        f"Hello {guild.name}! I am {self.bot.user.display_name}. Thank you for inviting me.\n\nTo see "
+                        f"what commands I have available type `Arif.help`.\n")
+        except PermissionError:
+            pass
 
 
 def setup(client):
