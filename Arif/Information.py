@@ -74,7 +74,7 @@ class Information(commands.Cog):
         fields = [("Music", "play,pause,resume,join,disconnect", True),
                   ("User", "userinfo or memberinfo,Svinfo or Svinfo", True),
                   ("Log", "setupLogChannel or LogChannelSetup  creates log text channel", True),
-                  ("Game", "Rock-Paper-Scissors", "True"),
+                  ("Game", "Rock-Paper-Scissors,CoinFlip", "True"),
                   ("More", "Arif.help 'command name' extented help with specified command.", "True"),
 
                   ]

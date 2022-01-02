@@ -123,9 +123,13 @@ class Logs(commands.Cog):
             general = find(lambda x: x.name == 'general' or 'genel', guild.text_channels)
             if general:
                 if general and general.permissions_for(guild.me).send_messages:
-                    await self.bot.guild.text_channels[0].send(
+                    await guild.text_channels[0].send(
                         f"Hello {guild.name}! I am {self.bot.user.display_name}. Thank you for inviting me.\n\nTo see "
                         f"what commands I have available type `Arif.help`.\n")
+                    Server=Get_Server(id=guild.id)
+                    if len(Server)>0:
+                        print("Server and log channel detected")
+                        self.log_channel_id=Server[0][3]
         except PermissionError:
             pass
 

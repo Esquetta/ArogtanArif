@@ -46,7 +46,7 @@ class Game(commands.Cog):
         else:
             embed = Embed(title="CoinFlip", description=f"{ctx.author.mention} Flipped coin, we got **Tails**!")
             await ctx.send(embed=embed)
-
+    '''Gif Alanı gelicek tenor api ile search veya random git yollanmalı'''
 
 def setup(client):
     client.add_cog(Game(client))

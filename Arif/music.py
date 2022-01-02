@@ -63,7 +63,7 @@ class MusicPlayer:
     def __init__(self, ctx):
         self.bot = ctx.bot
         self.guild = ctx.guild
-        self.cog = ctx.god
+        self.cog = ctx.cog
         self.queue = asyncio.Queue()
         self.next = asyncio.Event()
         self.now_Playing = None
@@ -94,6 +94,7 @@ class MusicPlayer:
 class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.players = {}
         self.queue = asyncio.Queue()
         self.next = asyncio.Event()
         self.current = None
@@ -107,6 +108,16 @@ class Music(commands.Cog):
                 time.sleep(1)
                 await voice.disconnect()
                 await channel.channels[0].send("Disconnected from channel because of inactivity.")
+
+    def get_player(self, ctx):
+        """Retrieve the guild player, or generate one."""
+        try:
+            player = self.players[ctx.guild.id]
+        except KeyError:
+            player = MusicPlayer(ctx)
+            self.players[ctx.guild.id] = player
+
+        return player
 
     @commands.command(name="join", help="Arif connects a voice channel.", aliases=["connect"], pass_context=True)
     async def join(self, ctx):
@@ -134,6 +145,7 @@ class Music(commands.Cog):
         embed = Embed(title="Now Playing", colour=ctx.guild.owner.colour,
                       timestamp=datetime.datetime.utcnow())
         embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url)
+        player = self.get_player(ctx)
         try:
             voice_channel = ctx.author.voice.channel
             await  voice_channel.connect()
@@ -197,7 +209,7 @@ class Music(commands.Cog):
             pass
 
     @commands.command(name="volume", help="Increase or decrease voice volume.", aliases=["sound"],
-                          invoke_without_command=True)
+                      invoke_without_command=True)
     async def volume(self, ctx, volume: str):
         if volume.isdigit():
             if ctx.voice_client is None:
@@ -213,22 +225,33 @@ class Music(commands.Cog):
     @commands.command(name="Skip")
     async def skip(self, ctx):
         if not ctx.voice_client or not ctx.voice_client.is_connected():
-             return await ctx.send('I am not currently playing anything!', delete_after=20)
+            return await ctx.send('I am not currently playing anything!', delete_after=20)
 
         if ctx.voice_client.is_paused():
-             pass
+            pass
         elif not ctx.voice_client.is_playing():
-             return
+            return
 
         ctx.voice_client.stop()
         await ctx.send(f'**`{ctx.author}`**: Skipped the song!')
 
     @commands.command(name="QueueInfo")
     async def queue_Info(self, ctx):
-        upcoming = list(itertools.islice(await self.queue.get(), 0, 5))
-        info = "\n".join(f'**`{_["title"]}`**' for _ in upcoming)
-        embed = Embed(title="Queue Info", colour=ctx.guild.owner.colour,
-                          timestamp=datetime.datetime.utcnow(), description=info)
+        vc = ctx.voice_client
+
+        if not vc or not vc.is_connected():
+            return await ctx.send('I am not currently connected to voice!', delete_after=20)
+
+        player = self.get_player(ctx)
+        if self.queue.empty():
+            return await ctx.send('There are currently no more queued songs.')
+
+        # Grab up to 5 entries from the queue...
+        upcoming = list(itertools.islice(self.queue._queue, 0, 5))
+
+        fmt = '\n'.join(f'**`{_["title"]}`**' for _ in upcoming)
+        embed = discord.Embed(title=f'Upcoming - Next {len(upcoming)}', description=fmt)
+
         await ctx.send(embed=embed)
 
 
