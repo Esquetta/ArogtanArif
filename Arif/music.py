@@ -62,6 +62,52 @@ class VoiceEntry:
         self.player = player
 
 
+class VoiceState:
+    def __init__(self, bot):
+        self.current = None
+        self.voice = None
+        self.bot = bot
+        self.play_next_song = asyncio.Event()
+        self.songs = asyncio.Queue()
+        self.skip_votes = set()  # a set of user_ids that voted
+        self.audio_player = self.bot.loop.create_task(self.audio_player_task())
+
+    def is_playing(self):
+        if self.voice is None or self.current is None:
+            return False
+
+        player = self.current.player
+        return not player.is_done()
+
+    @property
+    def player(self):
+        return self.current.player
+
+    def skip(self):
+        self.skip_votes.clear()
+        if self.is_playing():
+            self.player.stop()
+
+    def toggle_next(self):
+        self.bot.loop.call_soon_threadsafe(self.play_next_song.set)
+
+    async def audio_player_task(self):
+        while True:
+            self.play_next_song.clear()
+            self.current = await self.songs.get()
+            embed = Embed(title="Now Playing", colour=0x00FF00,
+                          timestamp=datetime.datetime.utcnow())
+            embed.set_thumbnail(url=self.current.data["thumbnail"])
+            fields = [("Music", f"{self.current.title}", True),
+                      ("Author:", f"{self.current.data['channel']}", True),
+                      ]
+            for name, value, inline in fields:
+                embed.add_field(name=name, value=value, inline=inline)
+            await self.bot.send_message()
+            self.current.player.start()
+            await self.play_next_song.wait()
+
+
 class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -69,6 +115,13 @@ class Music(commands.Cog):
         self.queue = asyncio.Queue()
         self.next = asyncio.Event()
         self.current = None
+
+    def get_voice_state(self, server):
+        state = self.voice_states.get(server.id)
+        if state is None:
+            state = VoiceState(self.bot)
+            self.voice_states[server.id] = state
+        return state
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
@@ -131,7 +184,7 @@ class Music(commands.Cog):
                                   timestamp=datetime.datetime.utcnow())
                     embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url)
                     async with ctx.typing():
-                        self.current=await self.queue.get()
+                        self.current = await self.queue.get()
                         ctx.voice_client.play(player, after=lambda e: print(f'Player error: {e}') if e else None)
                         embed.set_thumbnail(url=self.current.data["thumbnail"])
                         fields = [("Music", f"{self.current.title}", True),
