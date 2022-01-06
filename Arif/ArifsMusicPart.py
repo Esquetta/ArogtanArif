@@ -1,5 +1,7 @@
 import discord
 from discord.ext import commands
+
+import Fun
 import music
 import Information
 import Logs
@@ -14,7 +16,7 @@ load_dotenv()
 token = os.getenv("DISCORD_TOKEN")
 prefix = "Arif."
 OWNER_IDS = [276761363022479361]
-cogs = [music, Information, Logs, Game]
+cogs = [music, Information, Logs, Game,Fun]
 intents = discord.Intents().all()
 client = commands.Bot(command_prefix=prefix, intents=intents, owner_ids=OWNER_IDS)
 client.remove_command("help")
