@@ -9,15 +9,15 @@ class Information(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="Userinfo", help="Show specified user info. ", aliases=["MemberInfo"])
+    @commands.command(name="Userinfo", help="Show specified user info. ", aliases=["MemberInfo", "userinfo"])
     async def user_info(self, ctx, user: Optional[Member]):
         user = user or ctx.author
         embedInfo = discord.Embed(title="User Information", colour=user.guild.owner.colour,
                                   timestamp=datetime.datetime.utcnow())
         embedInfo.set_thumbnail(url=user.avatar_url)
-        embedInfo.set_thumbnail(url=ctx.guild.icon_url)
+
         fields = [("ID", user.id, False),
-                  ("Username", str(user), True),
+                  ("Username", str(user.mention), True),
                   ("Is Bot ?", user.bot, True),
                   ("Created At", user.created_at, True),
                   ("Status", str(user.status).title(), True),
@@ -37,6 +37,7 @@ class Information(commands.Cog):
     async def server_info(self, ctx):
         embed = discord.Embed(title="Server Information", colour=ctx.guild.owner.colour,
                               timestamp=datetime.datetime.utcnow())
+        embed.set_thumbnail(url=ctx.guild.icon_url)
         statuses = [len(list(filter(lambda m: str(m.status) == "online", ctx.guild.members))),
                     len(list(filter(lambda m: str(m.status) == "idle", ctx.guild.members))),
                     len(list(filter(lambda m: str(m.status) == "dnd", ctx.guild.members))),
@@ -44,7 +45,7 @@ class Information(commands.Cog):
                     ]
         fields = [("ID", ctx.guild.id, True),
                   ("Name", ctx.guild.name, True),
-                  ("Owner", ctx.guild.owner, True),
+                  ("Owner", ctx.guild.owner.mention, True),
                   ("Region", ctx.guild.region, True),
                   ("Created at", ctx.guild.created_at.strftime("%d.%m.%Y %H:%M:%S"), True),
                   ("Members", len(ctx.guild.members), True),
@@ -67,7 +68,7 @@ class Information(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.group(invoke_without_command=True)
-    async def help(self,ctx):
+    async def help(self, ctx):
         embed = Embed(title="Commands ", description="Arif Commands List ", colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
         embed.set_author(name='Help')
@@ -75,7 +76,8 @@ class Information(commands.Cog):
                   ("User", "userinfo or memberinfo,Svinfo or Svinfo", True),
                   ("Log", "setupLogChannel or LogChannelSetup  creates log text channel", True),
                   ("Game", "Rock-Paper-Scissors,CoinFlip", "True"),
-                  ("More", "Arif.help 'command name' extented help with specified command.", "True"),
+                  ("Fun", "Gif", "True"),
+                  ("More", "Arif.help 'command name' extented help with specified command.", "True")
 
                   ]
 
@@ -84,7 +86,7 @@ class Information(commands.Cog):
         await  ctx.send(embed=embed)
 
     @help.command(name="play")
-    async def play(self,ctx):
+    async def play(self, ctx):
         embed = Embed(title="Play", description="Play usage", colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
         embed.set_author(name="Play")
@@ -124,8 +126,10 @@ class Information(commands.Cog):
                       timestamp=datetime.datetime.utcnow())
         embed.set_author(name="Disconnect")
         embed.add_field(name="Exp", value="Arif.userinfo or Arif.memberinfo", inline=True)
-        embed.add_field(name="Return", value="If you dont give a user (Arif.userinfo) return your account information.", inline=True)
-        embed.add_field(name="Return", value="If you dont give a user (Arif.userinfo @Me) return specified user  account information.",
+        embed.add_field(name="Return", value="If you dont give a user (Arif.userinfo) return your account information.",
+                        inline=True)
+        embed.add_field(name="Return",
+                        value="If you dont give a user (Arif.userinfo @Me) return specified user  account information.",
                         inline=True)
         await  ctx.send(embed=embed)
 
@@ -145,7 +149,8 @@ class Information(commands.Cog):
                       timestamp=datetime.datetime.utcnow())
         embed.set_author(name="Disconnect")
         embed.add_field(name="Exp", value="Arif.SvInfo or Arif.vInfo", inline=True)
-        embed.add_field(name="Info", value="Arif creates named log channel and userprofle,username,message edit,message delete all this triggered sends log channel.(Everyone can see and write this channel)",
+        embed.add_field(name="Info",
+                        value="Arif creates named log channel and userprofle,username,message edit,message delete all this triggered sends log channel.(Everyone can see and write this channel)",
                         inline=True)
         await  ctx.send(embed=embed)
 
@@ -159,9 +164,6 @@ class Information(commands.Cog):
                         value="Arif.RockPaperScissors 'and your choice' after bot return his choice and who is winner.",
                         inline=True)
         await  ctx.send(embed=embed)
-
-
-
 
 
 def setup(client):

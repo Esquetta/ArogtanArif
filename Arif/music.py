@@ -7,7 +7,6 @@ import youtube_dl
 from discord.ext import commands
 from discord import Embed
 import discord.errors
-from youtube_dl import DownloadError
 
 youtube_dl.utils.bug_reports_message = lambda: ''
 
@@ -63,65 +62,53 @@ class VoiceEntry:
 
 
 class VoiceState:
-    def __init__(self, bot):
+    __slots__ = ('bot', 'guild', 'channel', 'cog', 'queue', 'next', 'current', 'volume', 'ctx')
+
+    def __init__(self, ctx):
+        self.bot = ctx.bot
+        self.guild = ctx.guild
+        self.channel = ctx.channel
+        self.cog = ctx.cog
+        self.ctx = ctx
+        self.queue = asyncio.Queue()
+        self.next = asyncio.Event()
+
+        self.volume = .5
         self.current = None
-        self.voice = None
-        self.bot = bot
-        self.play_next_song = asyncio.Event()
-        self.songs = asyncio.Queue()
-        self.skip_votes = set()  # a set of user_ids that voted
-        self.audio_player = self.bot.loop.create_task(self.audio_player_task())
 
-    def is_playing(self):
-        if self.voice is None or self.current is None:
-            return False
-
-        player = self.current.player
-        return not player.is_done()
-
-    @property
-    def player(self):
-        return self.current.player
-
-    def skip(self):
-        self.skip_votes.clear()
-        if self.is_playing():
-            self.player.stop()
-
-    def toggle_next(self):
-        self.bot.loop.call_soon_threadsafe(self.play_next_song.set)
+        ctx.bot.loop.create_task(self.audio_player_task())
 
     async def audio_player_task(self):
-        while True:
-            self.play_next_song.clear()
-            self.current = await self.songs.get()
-            embed = Embed(title="Now Playing", colour=0x00FF00,
+        while not self.bot.is_closed():
+            self.next.clear()
+            self.current = await self.queue.get()
+            embed = Embed(title="Now Playing", colour=self.guild.owner.colour,
                           timestamp=datetime.datetime.utcnow())
             embed.set_thumbnail(url=self.current.data["thumbnail"])
             fields = [("Music", f"{self.current.title}", True),
                       ("Author:", f"{self.current.data['channel']}", True),
+                      ("Volume:", f"{int((self.volume*100))}/150", True),
                       ]
             for name, value, inline in fields:
                 embed.add_field(name=name, value=value, inline=inline)
-            await self.bot.send_message()
-            self.current.player.start()
-            await self.play_next_song.wait()
+            await self.channel.send(embed=embed)
+            self.guild.voice_client.play(self.current,
+                                         after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
+            await self.next.wait()
 
 
 class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.voice_states = {}
-        self.queue = asyncio.Queue()
-        self.next = asyncio.Event()
-        self.current = None
 
-    def get_voice_state(self, server):
-        state = self.voice_states.get(server.id)
-        if state is None:
-            state = VoiceState(self.bot)
-            self.voice_states[server.id] = state
-        return state
+    def get_voice_state(self, ctx):
+        try:
+            player = self.voice_states[ctx.guild.id]
+        except KeyError:
+            player = VoiceState(ctx)
+            self.voice_states[ctx.guild.id] = player
+        return player
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
@@ -156,76 +143,27 @@ class Music(commands.Cog):
     async def play(self, ctx, *, url):
         if ctx.author.voice is None:
             await  ctx.send("Connect a voice channel.")
-        embed = Embed(title="Now Playing", colour=ctx.guild.owner.colour,
+        if not ctx.voice_client:
+            await ctx.invoke(self.join)
+        embed = Embed(title="Added Queue", colour=ctx.guild.owner.colour,
                       timestamp=datetime.datetime.utcnow())
         embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url)
-        while True:
-            self.next.clear()
-            try:
-                if not self.queue.qsize() > 0:
-                    voice_channel = ctx.author.voice.channel
-                    await  voice_channel.connect()
-                    embed = Embed(title="", colour=ctx.guild.owner.colour,
-                                  timestamp=datetime.datetime.utcnow())
-                    embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url)
-                    async with ctx.typing():
-                        player = await YTDLSource.from_url(url, loop=self.bot.loop)
-                        ctx.voice_client.play(player, after=lambda e: print(f'Player error: {e}') if e else None)
-                        embed.set_thumbnail(url=player.data["thumbnail"])
-                        fields = [("Music", f"{player.title}", True),
-                                  ("Author:", f"{player.data['channel']}", True),
-                                  ]
-                        for name, value, inline in fields:
-                            embed.add_field(name=name, value=value, inline=inline)
-                        await ctx.send(embed=embed)
-                        await self.next.wait()
-                else:
-                    embed = Embed(title="", colour=ctx.guild.owner.colour,
-                                  timestamp=datetime.datetime.utcnow())
-                    embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url)
-                    async with ctx.typing():
-                        self.current = await self.queue.get()
-                        ctx.voice_client.play(player, after=lambda e: print(f'Player error: {e}') if e else None)
-                        embed.set_thumbnail(url=self.current.data["thumbnail"])
-                        fields = [("Music", f"{self.current.title}", True),
-                                  ("Author:", f"{self.current.data['channel']}", True),
-                                  ]
-                        for name, value, inline in fields:
-                            embed.add_field(name=name, value=value, inline=inline)
-                        await ctx.send(embed=embed)
-                        await self.next.wait()
-
-            except discord.ClientException:
-                async with ctx.typing():
-                    player = await YTDLSource.from_url(url, loop=self.bot.loop)
-                    await  self.queue.put(player)
-                    embed = Embed(title="Added Queue", colour=ctx.guild.owner.colour,
-                                  timestamp=datetime.datetime.utcnow())
-                    embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url)
-                    embed.set_thumbnail(url=player.data["thumbnail"])
-                    fields = [("Music", f"{player.title}", True),
-                              ("Author:", f"{player.data['channel']}", True),
-                              ]
-                    for name, value, inline in fields:
-                        embed.add_field(name=name, value=value, inline=inline)
-                    await ctx.send(embed=embed)
-            except DownloadError:
-                await ctx.send("Unsupported URL")
-            except PermissionError:
-                await ctx.send("I'dont have permission this voice channel.")
-
-    @commands.command(name="pause", help="Arif stops music.", pass_context=True)
-    async def pause(self, ctx):
+        state = self.get_voice_state(ctx)
         try:
-            if ctx.voice_client is None:
-                await  ctx.send("There is no music so you can't stop it.")
-            elif ctx.voice_client.is_playing():
-                await  ctx.send("Stopped. ▶")
-                await  ctx.voice_client.pause()
-            else:
-                await ctx.send("I'm in your voice channel but you didn't give me music name or url.")
-        except TypeError:
-            pass
+            player = await YTDLSource.from_url(url, loop=self.bot.loop)
+        except Exception as exc:
+            ms = f'An error occurred while processing this request: ```py\n{type(exc).__name__}: {exc}\n```'
+            await ctx.send(ms)
+        else:
+            embed.set_thumbnail(url=player.data["thumbnail"])
+            fields = [("Music", f"{player.title}", True),
+                      ("Author:", f"{player.data['channel']}", True),
+                      ]
+            for name, value, inline in fields:
+                embed.add_field(name=name, value=value, inline=inline)
+            if ctx.voice_client.is_playing():
+                await ctx.send(embed=embed)
+            await state.queue.put(player)
 
     @commands.command(name="resume", help="Arif continues stopped music.", aliases=["devam"], pass_context=True)
     async def resume(self, ctx):
@@ -240,26 +178,41 @@ class Music(commands.Cog):
 
     @commands.command(name="volume", help="Increase or decrease voice volume.", aliases=["sound"],
                       invoke_without_command=True)
-    async def volume(self, ctx, volume: str):
-        if volume.isdigit():
+    async def volume(self, ctx, *, volume: float):
+        try:
+            player = self.get_voice_state(ctx)
             if ctx.voice_client is None:
                 return await ctx.send("Not connected to a voice channel.")
-            elif ctx.voice_client is not None and not ctx.voice_client.is_playing():
+            elif not ctx.voice_client.is_playing():
                 return await ctx.send("There no playing music here.")
+            if 0 < volume <= 150:
+                if ctx.voice_client.source:
+                    ctx.voice_client.source.volume = volume / 100
+                    player.volume = volume / 100
+
+                player.volume = volume / 100
+                await ctx.send(f"Changed volume to {volume}%")
             else:
-                await ctx.send(
-                    "You must enter number(not decimals) value for this, but be carefull dont fuck your ears.")
-            ctx.voice_client.source.volume = int(volume) / 100
-            await ctx.send(f"Changed volume to {volume}%")
+                await ctx.send("Please enter a value between 1 and 150.")
+        except TypeError:
+            await ctx.send("You must enter numeric values.")
 
     @commands.command(name="Skip", aliases=["skip"])
     async def skip(self, ctx):
         if ctx.voice_client.is_playing():
-            await ctx.voice_client.stop()
-            await ctx.send(f'**`{ctx.author}`**: Skipped the song!')
+            ctx.voice_client.stop()
+            await ctx.send(f'**`{ctx.author.name}`**: Skipped the song!')
         else:
             await ctx.send('*There is no playing music.*')
 
+    @commands.command(name="pause", aliases=['Pause'])
+    async def pause(self, ctx):
+        if ctx.voice_client.is_playing():
+            ctx.voice_client.pause()
+            await ctx.send("Paused ⏹")
+        else:
+            await ctx.send("There no playing music here.")
+    '''Queue list gelicek'''
 
 def setup(client):
     client.add_cog(Music(client))
