@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import itertools
 import time
 
 import discord
@@ -87,7 +88,7 @@ class VoiceState:
             embed.set_thumbnail(url=self.current.data["thumbnail"])
             fields = [("Music", f"{self.current.title}", True),
                       ("Author:", f"{self.current.data['channel']}", True),
-                      ("Volume:", f"{int((self.volume*100))}/150", True),
+                      ("Volume:", f"{int((self.volume * 100))}/150", True),
                       ]
             for name, value, inline in fields:
                 embed.add_field(name=name, value=value, inline=inline)
@@ -212,7 +213,20 @@ class Music(commands.Cog):
             await ctx.send("Paused ⏹")
         else:
             await ctx.send("There no playing music here.")
-    '''Queue list gelicek'''
+
+    @commands.command(name="Queue", aliases=["queue", "playlist"])
+    async def queue_info(self, ctx):
+        if not ctx.voice_client or not ctx.voice_client.is_connected():
+            return await ctx.send("I'm not connected a voice channel.", delete_after=15)
+        player = self.get_voice_state(ctx)
+        if player.queue.empty():
+            return await ctx.send("There are currently no more queued song.")
+        player_queue = list(itertools.islice(player.queue._queue, 0, 5))
+        fmt = '\n'.join(f'**`{item["title"]}`**' for item in player_queue)
+        embed = discord.Embed(title=f'Upcoming - Next {len(player_queue)}', description=fmt)
+
+        await ctx.send(embed=embed)
+
 
 def setup(client):
     client.add_cog(Music(client))
