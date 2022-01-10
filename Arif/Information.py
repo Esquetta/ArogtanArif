@@ -72,6 +72,7 @@ class Information(commands.Cog):
         embed = Embed(title="Commands ", description="Arif Commands List ", colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
         embed.set_author(name='Help')
+        embed.set_thumbnail(url=self.bot.user.avatar_url)
         fields = [("Music", "play,pause,resume,join,disconnect", True),
                   ("User", "userinfo or memberinfo,Svinfo or Svinfo", True),
                   ("Log", "setupLogChannel or LogChannelSetup  creates log text channel", True),

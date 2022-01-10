@@ -83,8 +83,13 @@ class VoiceState:
         while not self.bot.is_closed():
             self.next.clear()
             self.current = await self.queue.get()
+            total_seconds = self.current.data["duration"]
+            hours = (total_seconds - (total_seconds % 3600)) / 3600
+            seconds_minus_hours = (total_seconds - hours * 3600)
+            minutes = (seconds_minus_hours - (seconds_minus_hours % 60)) / 60
+            seconds = seconds_minus_hours - minutes * 60
             embed = Embed(title="Now Playing", colour=self.guild.owner.colour,
-                          timestamp=datetime.datetime.utcnow())
+                          timestamp=datetime.datetime.utcnow(),description=f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬ {int(hours)}:{int(minutes)}:{int(seconds)}")
             embed.set_thumbnail(url=self.current.data["thumbnail"])
             fields = [("Music", f"{self.current.title}", True),
                       ("Author:", f"{self.current.data['channel']}", True),
@@ -222,8 +227,8 @@ class Music(commands.Cog):
         if player.queue.empty():
             return await ctx.send("There are currently no more queued song.")
         player_queue = list(itertools.islice(player.queue._queue, 0, 5))
-        fmt = '\n'.join(f'**`{item["title"]}`**' for item in player_queue)
-        embed = discord.Embed(title=f'Upcoming - Next {len(player_queue)}', description=fmt)
+        fmt = '\n'.join(f'**`{item.data["title"]}`**' for item in player_queue)
+        embed = discord.Embed(title=f'Upcoming - Next {len(player_queue)}', description=fmt,colour=ctx.guild.owner.colour)
 
         await ctx.send(embed=embed)
 
