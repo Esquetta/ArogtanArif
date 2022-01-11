@@ -2,9 +2,11 @@ import asyncio
 import datetime
 import itertools
 import time
+from functools import partial
 
 import discord
 import youtube_dl
+from async_timeout import timeout
 from discord.ext import commands
 from discord import Embed
 import discord.errors
@@ -43,6 +45,12 @@ class YTDLSource(discord.PCMVolumeTransformer):
     async def from_url(cls, url, *, loop=None, stream=False):
         loop = loop or asyncio.get_event_loop()
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
+        if data['_type'] == 'playlist':
+            for item in data["entries"]:
+                data = item
+                filename = data['url'] if stream else ytdl.prepare_filename(data)
+                return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
+
         if "entries" in data:
             data = data["entries"][0]
         filename = data['url'] if stream else ytdl.prepare_filename(data)
@@ -51,7 +59,11 @@ class YTDLSource(discord.PCMVolumeTransformer):
     @classmethod
     async def regather_stream(cls, data, *, loop):
         loop = loop or asyncio.get_event_loop()
-        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(data, download=False))
+        requester = data['requester']
+
+        to_run = partial(ytdl.extract_info, url=data['webpage_url'], download=False)
+        data = await loop.run_in_executor(None, to_run)
+
         return cls(discord.FFmpegPCMAudio(data['url']), data=data)
 
 
@@ -89,7 +101,8 @@ class VoiceState:
             minutes = (seconds_minus_hours - (seconds_minus_hours % 60)) / 60
             seconds = seconds_minus_hours - minutes * 60
             embed = Embed(title="Now Playing", colour=self.guild.owner.colour,
-                          timestamp=datetime.datetime.utcnow(),description=f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬ {int(hours)}:{int(minutes)}:{int(seconds)}")
+                          timestamp=datetime.datetime.utcnow(),
+                          description=f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬ {int(hours)}:{int(minutes)}:{int(seconds)}")
             embed.set_thumbnail(url=self.current.data["thumbnail"])
             fields = [("Music", f"{self.current.title}", True),
                       ("Author:", f"{self.current.data['channel']}", True),
@@ -100,7 +113,11 @@ class VoiceState:
             await self.channel.send(embed=embed)
             self.guild.voice_client.play(self.current,
                                          after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
-            await self.next.wait()
+            try:
+                async with timeout(180):
+                    await self.next.wait()
+            except asyncio.TimeoutError:
+                self.bot.disconnect()
 
 
 class Music(commands.Cog):
@@ -168,7 +185,7 @@ class Music(commands.Cog):
             for name, value, inline in fields:
                 embed.add_field(name=name, value=value, inline=inline)
             if ctx.voice_client.is_playing():
-                await ctx.send(embed=embed)
+                await ctx.send(embed=embed, delete_after=10)
             await state.queue.put(player)
 
     @commands.command(name="resume", help="Arif continues stopped music.", aliases=["devam"], pass_context=True)
@@ -228,7 +245,8 @@ class Music(commands.Cog):
             return await ctx.send("There are currently no more queued song.")
         player_queue = list(itertools.islice(player.queue._queue, 0, 5))
         fmt = '\n'.join(f'**`{item.data["title"]}`**' for item in player_queue)
-        embed = discord.Embed(title=f'Upcoming - Next {len(player_queue)}', description=fmt,colour=ctx.guild.owner.colour)
+        embed = discord.Embed(title=f'Upcoming - Next {len(player_queue)}', description=fmt,
+                              colour=ctx.guild.owner.colour)
 
         await ctx.send(embed=embed)
 
