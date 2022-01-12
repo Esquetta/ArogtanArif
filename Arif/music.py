@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import itertools
+import random
 import time
 from functools import partial
 
@@ -45,12 +46,6 @@ class YTDLSource(discord.PCMVolumeTransformer):
     async def from_url(cls, url, *, loop=None, stream=False):
         loop = loop or asyncio.get_event_loop()
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
-        if data['_type'] == 'playlist':
-            for item in data["entries"]:
-                data = item
-                filename = data['url'] if stream else ytdl.prepare_filename(data)
-                return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
-
         if "entries" in data:
             data = data["entries"][0]
         filename = data['url'] if stream else ytdl.prepare_filename(data)
@@ -67,12 +62,26 @@ class YTDLSource(discord.PCMVolumeTransformer):
         return cls(discord.FFmpegPCMAudio(data['url']), data=data)
 
 
-class VoiceEntry:
-    def __init__(self, message, player):
-        self.requester = message.author
-        self.channel = message.channel
-        self.player = player
+class SongQueue(asyncio.Queue):
+    def __getitem__(self, item):
+        if isinstance(item, slice):
+            return list(itertools.islice(self._queue, item.start, item.stop, item.step))
+        else:
+            return self._queue[item]
+    def __iter__(self):
+        return self._queue.__iter__()
 
+    def __len__(self):
+        return self.qsize()
+
+    def clear(self):
+        self._queue.clear()
+
+    def shuffle(self):
+        random.shuffle(self._queue)
+
+    def remove(self, index: int):
+        del self._queue[index]
 
 class VoiceState:
     __slots__ = ('bot', 'guild', 'channel', 'cog', 'queue', 'next', 'current', 'volume', 'ctx')
@@ -83,7 +92,7 @@ class VoiceState:
         self.channel = ctx.channel
         self.cog = ctx.cog
         self.ctx = ctx
-        self.queue = asyncio.Queue()
+        self.queue = SongQueue()
         self.next = asyncio.Event()
 
         self.volume = .5
@@ -113,11 +122,7 @@ class VoiceState:
             await self.channel.send(embed=embed)
             self.guild.voice_client.play(self.current,
                                          after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
-            try:
-                async with timeout(180):
-                    await self.next.wait()
-            except asyncio.TimeoutError:
-                self.bot.disconnect()
+            await self.next.wait()
 
 
 class Music(commands.Cog):
@@ -158,6 +163,7 @@ class Music(commands.Cog):
     async def disconnect(self, ctx):
         try:
             await  ctx.voice_client.disconnect()
+            del self.voice_states[ctx.guild.id]
             await  ctx.send("Disconnected!")
         except AttributeError:
             await  ctx.send("I can't disconnect because I'm not connected to an voice channel.")
@@ -249,6 +255,18 @@ class Music(commands.Cog):
                               colour=ctx.guild.owner.colour)
 
         await ctx.send(embed=embed)
+
+    @commands.command(name="shuffle", aliases=["Shuffle", "mix"])
+    async def shuffle(self, ctx):
+        player = self.get_voice_state(ctx)
+        if player.queue.qsize()>0:
+            player.queue.shuffle()
+            await ctx.send("✅")
+        else:
+            return await ctx.send('Empty queue.')
+    '''Remove from Queue commands comes right here ><'''
+
+
 
 
 def setup(client):
