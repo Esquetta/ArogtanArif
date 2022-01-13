@@ -293,6 +293,17 @@ class Music(commands.Cog):
         player.queue.remove(index - 1)
         await ctx.message.add_reaction('✅')
 
+    @commands.command(name="Repeat", aliases=["repeat"])
+    async def repeat(self, ctx):
+        if not ctx.voice_client.is_playing():
+            await ctx.message.add_reaction("❌")
+            return await ctx.send('Nothing being played at the moment.')
+        player = self.get_voice_state(ctx)
+        await player.queue.put(player.current)
+        await ctx.message.add_reaction('✅')
+        await ctx.send("This song added end of the queue.")
+
+
 
 def setup(client):
     client.add_cog(Music(client))
