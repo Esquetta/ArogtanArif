@@ -68,6 +68,7 @@ class SongQueue(asyncio.Queue):
             return list(itertools.islice(self._queue, item.start, item.stop, item.step))
         else:
             return self._queue[item]
+
     def __iter__(self):
         return self._queue.__iter__()
 
@@ -83,8 +84,9 @@ class SongQueue(asyncio.Queue):
     def remove(self, index: int):
         del self._queue[index]
 
+
 class VoiceState:
-    __slots__ = ('bot', 'guild', 'channel', 'cog', 'queue', 'next', 'current', 'volume', 'ctx')
+    __slots__ = ('bot', 'guild', 'channel', 'cog', 'queue', 'next', 'current', 'volume', 'ctx', 'previous', 'loop')
 
     def __init__(self, ctx):
         self.bot = ctx.bot
@@ -94,6 +96,8 @@ class VoiceState:
         self.ctx = ctx
         self.queue = SongQueue()
         self.next = asyncio.Event()
+        self.previous = None
+        self.loop = False
 
         self.volume = .5
         self.current = None
@@ -102,26 +106,32 @@ class VoiceState:
 
     async def audio_player_task(self):
         while not self.bot.is_closed():
-            self.next.clear()
-            self.current = await self.queue.get()
-            total_seconds = self.current.data["duration"]
-            hours = (total_seconds - (total_seconds % 3600)) / 3600
-            seconds_minus_hours = (total_seconds - hours * 3600)
-            minutes = (seconds_minus_hours - (seconds_minus_hours % 60)) / 60
-            seconds = seconds_minus_hours - minutes * 60
-            embed = Embed(title="Now Playing", colour=self.guild.owner.colour,
-                          timestamp=datetime.datetime.utcnow(),
-                          description=f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬ {int(hours)}:{int(minutes)}:{int(seconds)}")
-            embed.set_thumbnail(url=self.current.data["thumbnail"])
-            fields = [("Music", f"{self.current.title}", True),
-                      ("Author:", f"{self.current.data['channel']}", True),
-                      ("Volume:", f"{int((self.volume * 100))}/150", True),
-                      ]
-            for name, value, inline in fields:
-                embed.add_field(name=name, value=value, inline=inline)
-            await self.channel.send(embed=embed)
-            self.guild.voice_client.play(self.current,
-                                         after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
+            if self.loop == False:
+                self.next.clear()
+                self.current = await self.queue.get()
+                total_seconds = self.current.data["duration"]
+                hours = (total_seconds - (total_seconds % 3600)) / 3600
+                seconds_minus_hours = (total_seconds - hours * 3600)
+                minutes = (seconds_minus_hours - (seconds_minus_hours % 60)) / 60
+                seconds = seconds_minus_hours - minutes * 60
+                embed = Embed(title="Now Playing", colour=self.guild.owner.colour,
+                              timestamp=datetime.datetime.utcnow(),
+                              description=f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬ {int(hours)}:{int(minutes)}:{int(seconds)}")
+                embed.set_thumbnail(url=self.current.data["thumbnail"])
+                fields = [("Music", f"{self.current.title}", True),
+                          ("Author:", f"{self.current.data['channel']}", True),
+                          ("Volume:", f"{int((self.volume * 100))}/150", True),
+                          ]
+                for name, value, inline in fields:
+                    embed.add_field(name=name, value=value, inline=inline)
+                await self.channel.send(embed=embed)
+                self.guild.voice_client.play(self.current,
+                                             after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
+
+                self.previous = self.current
+            elif self.loop == True:
+                self.guild.voice_client.play(self.current,
+                                             after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
             await self.next.wait()
 
 
@@ -248,6 +258,7 @@ class Music(commands.Cog):
             return await ctx.send("I'm not connected a voice channel.", delete_after=15)
         player = self.get_voice_state(ctx)
         if player.queue.empty():
+            await ctx.message.add_reaction("❌")
             return await ctx.send("There are currently no more queued song.")
         player_queue = list(itertools.islice(player.queue._queue, 0, 5))
         fmt = '\n'.join(f'**`{item.data["title"]}`**' for item in player_queue)
@@ -259,14 +270,28 @@ class Music(commands.Cog):
     @commands.command(name="shuffle", aliases=["Shuffle", "mix"])
     async def shuffle(self, ctx):
         player = self.get_voice_state(ctx)
-        if player.queue.qsize()>0:
+        if player.queue.qsize() > 0:
             player.queue.shuffle()
-            await ctx.send("✅")
+            await ctx.message.add_reaction("✅")
         else:
             return await ctx.send('Empty queue.')
-    '''Remove from Queue commands comes right here ><'''
 
+    @commands.command(name="loop")
+    async def loop(self, ctx):
+        if not ctx.voice_client.is_playing():
+            return await ctx.send('Nothing being played at the moment.')
+        player = self.get_voice_state(ctx)
+        player.loop = not player.loop
+        await ctx.message.add_reaction('✅')
+        await ctx.send('Looping a song is now turned ' + ('on' if player.loop else 'off'))
 
+    @commands.command(name="remove")
+    async def remove_from_queue(self, ctx, index: int):
+        player = self.get_voice_state(ctx)
+        if len(player.queue) == 0:
+            return await ctx.send('Empty queue.')
+        player.queue.remove(index - 1)
+        await ctx.message.add_reaction('✅')
 
 
 def setup(client):
