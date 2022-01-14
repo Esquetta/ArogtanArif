@@ -7,7 +7,6 @@ from functools import partial
 
 import discord
 import youtube_dl
-from async_timeout import timeout
 from discord.ext import commands
 from discord import Embed
 import discord.errors
@@ -130,8 +129,8 @@ class VoiceState:
 
                 self.previous = self.current
             elif self.loop == True:
-                self.guild.voice_client.play(self.current,
-                                             after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
+                self.current=discord.FFmpegPCMAudio(self.current.source.stream_url,**ffmpeg_options)
+                self.guild.voice_client.play(self.current,after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set()))
             await self.next.wait()
 
 
@@ -147,6 +146,9 @@ class Music(commands.Cog):
             player = VoiceState(ctx)
             self.voice_states[ctx.guild.id] = player
         return player
+
+    async def cog_command_error(self, ctx, error):
+        await ctx.send(f"An error accurred:{error}")
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
@@ -171,9 +173,11 @@ class Music(commands.Cog):
 
     @commands.command("disconnect", help="Arif leaves voice channel", aliases=["leave"], pass_context=True)
     async def disconnect(self, ctx):
+        player = self.get_voice_state(ctx)
         try:
             await  ctx.voice_client.disconnect()
             del self.voice_states[ctx.guild.id]
+            player.queue.clear()
             await  ctx.send("Disconnected!")
         except AttributeError:
             await  ctx.send("I can't disconnect because I'm not connected to an voice channel.")
@@ -230,7 +234,7 @@ class Music(commands.Cog):
                     player.volume = volume / 100
 
                 player.volume = volume / 100
-                await ctx.send(f"Changed volume to {volume}%")
+                await ctx.send(f"Changed volume to {int(volume)}%")
             else:
                 await ctx.send("Please enter a value between 1 and 150.")
         except TypeError:
@@ -303,6 +307,15 @@ class Music(commands.Cog):
         await ctx.message.add_reaction('✅')
         await ctx.send("This song added end of the queue.")
 
+    @commands.command(name="loop", alises=["Loop"])
+    async def loop(self, ctx):
+        if not ctx.voice_client.is_playing():
+            await ctx.message.add_reaction("❌")
+            return await ctx.send('Nothing being played at the moment.')
+        player = self.get_voice_state(ctx)
+        player.loop=not player.loop
+        await ctx.message.add_reaction('✅')
+        await ctx.send("Autoplay is "+('on' if player.loop else 'off'))
 
 
 def setup(client):
