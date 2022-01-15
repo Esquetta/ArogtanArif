@@ -45,6 +45,15 @@ class YTDLSource(discord.PCMVolumeTransformer):
     async def from_url(cls, url, *, loop=None, stream=False):
         loop = loop or asyncio.get_event_loop()
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
+        '''if data['_type']=='playlist':
+            youtube_playist=list()
+            if "entries" in data:
+                for item in data["entries"]:
+                    data =item
+                    filename = data['url'] if stream else ytdl.prepare_filename(data)
+                    youtube_playist.append(cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data))
+            return youtube_playist'''
+
         if "entries" in data:
             data = data["entries"][0]
         filename = data['url'] if stream else ytdl.prepare_filename(data)
@@ -129,8 +138,9 @@ class VoiceState:
 
                 self.previous = self.current
             elif self.loop == True:
-                self.current=discord.FFmpegPCMAudio(self.current.source.stream_url,**ffmpeg_options)
-                self.guild.voice_client.play(self.current,after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set()))
+                self.current = discord.FFmpegPCMAudio(self.current.data['url'], **ffmpeg_options)
+                self.guild.voice_client.play(self.current,
+                                             after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set()))
             await self.next.wait()
 
 
@@ -265,7 +275,7 @@ class Music(commands.Cog):
             await ctx.message.add_reaction("❌")
             return await ctx.send("There are currently no more queued song.")
         player_queue = list(itertools.islice(player.queue._queue, 0, 5))
-        fmt = '\n'.join(f'**`{item.data["title"]}`**' for item in player_queue)
+        fmt = '\n'.join(f'**`{item.index(item)} {item.data["title"]}`**' for item in player_queue)
         embed = discord.Embed(title=f'Upcoming - Next {len(player_queue)}', description=fmt,
                               colour=ctx.guild.owner.colour)
 
@@ -313,9 +323,10 @@ class Music(commands.Cog):
             await ctx.message.add_reaction("❌")
             return await ctx.send('Nothing being played at the moment.')
         player = self.get_voice_state(ctx)
-        player.loop=not player.loop
+        player.loop = not player.loop
         await ctx.message.add_reaction('✅')
-        await ctx.send("Autoplay is "+('on' if player.loop else 'off'))
+        await ctx.send("Autoplay is " + ('on' if player.loop else 'off'))
+        await ctx.send("When you use this command again loop is of.")
 
 
 def setup(client):
