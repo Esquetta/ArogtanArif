@@ -4,7 +4,9 @@ import itertools
 import random
 import time
 from functools import partial
+from typing import Optional
 
+import aiohttp
 import discord
 import youtube_dl
 from discord.ext import commands
@@ -32,6 +34,7 @@ ffmpeg_options = {
 }
 
 ytdl = youtube_dl.YoutubeDL(ytdl_format_options)  # Downloads  music  to our given options
+lyrics_url = f"https://some-random-api.ml/lyrics?title="
 
 
 class YTDLSource(discord.PCMVolumeTransformer):
@@ -275,7 +278,7 @@ class Music(commands.Cog):
             await ctx.message.add_reaction("❌")
             return await ctx.send("There are currently no more queued song.")
         player_queue = list(itertools.islice(player.queue._queue, 0, 5))
-        fmt = '\n'.join(f'**`{item.index(item)} {item.data["title"]}`**' for item in player_queue)
+        fmt = '\n'.join(f'**`{item.data["title"]}`**' for item in player_queue)
         embed = discord.Embed(title=f'Upcoming - Next {len(player_queue)}', description=fmt,
                               colour=ctx.guild.owner.colour)
 
@@ -327,6 +330,30 @@ class Music(commands.Cog):
         await ctx.message.add_reaction('✅')
         await ctx.send("Autoplay is " + ('on' if player.loop else 'off'))
         await ctx.send("When you use this command again loop is of.")
+
+    @commands.command(name="lyrics", aliases=["Lyrics"])
+    async def lyrics(self, ctx, name: Optional[str]):
+        player = self.get_voice_state(ctx)
+        name = name or player.current.title
+
+        async with ctx.typing():
+            async with aiohttp.request("GET", lyrics_url + name, headers={}) as req:
+                if not 200 <= req.status <= 299:
+                    return await ctx.send(
+                        "No lyric could be found.Or you could enter title of music here and try again.")
+                data = await req.json()
+                if len(data["lyrics"]) > 2000:
+                    return await ctx.send(f"<{data['links']['genius']}>")
+                embed = discord.Embed(title=data['title'], description=data['lyrics'], colour=ctx.author.colour,
+                                      timestamp=datetime.datetime.utcnow())
+                embed.set_thumbnail(url=data['thumbnail']['genius'])
+                embed.set_author(name=data['author'])
+                await ctx.send(embed=embed)
+
+    @lyrics.error
+    async def lyrics_error(self, ctx, exc):
+        if isinstance(exc, AttributeError):
+            await ctx.send("Bot plays nothing in this moment.")
 
 
 def setup(client):
