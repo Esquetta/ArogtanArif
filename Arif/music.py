@@ -139,13 +139,13 @@ class VoiceState:
                 self.guild.voice_client.play(self.current,
                                              after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
 
-                self.previous = self.current
+
             elif self.loop == True:
                 self.current = discord.FFmpegPCMAudio(self.current.data['url'], **ffmpeg_options)
                 self.guild.voice_client.play(self.current,
                                              after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set()))
             await self.next.wait()
-
+            self.previous = self.current
 
 class Music(commands.Cog):
     def __init__(self, bot):
@@ -340,7 +340,7 @@ class Music(commands.Cog):
             async with aiohttp.request("GET", lyrics_url + name, headers={}) as req:
                 if not 200 <= req.status <= 299:
                     return await ctx.send(
-                        "No lyric could be found.Or you could enter title of music here and try again.")
+                        "No lyrics could be found.Or you could enter title of music here and try again.")
                 data = await req.json()
                 if len(data["lyrics"]) > 2000:
                     return await ctx.send(f"<{data['links']['genius']}>")
@@ -354,6 +354,20 @@ class Music(commands.Cog):
     async def lyrics_error(self, ctx, exc):
         if isinstance(exc, AttributeError):
             await ctx.send("Bot plays nothing in this moment.")
+
+    @commands.command(name="playprevious", aliases=["playLast"])
+    async def play_previous(self, ctx):
+        player = self.get_voice_state(ctx)
+        if ctx.voice_client.is_playing():
+            if player.previous is not None and player.current != player.previous:
+                await player.queue.put(player.current)
+                player.current = player.previous
+                ctx.voice_client.stop()
+                await ctx.message.add_reaction('✅')
+            else:
+                await ctx.message.add_reaction("❌")
+        else:
+            await ctx.send('Nothing being played at the moment.')
 
 
 def setup(client):
