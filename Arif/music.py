@@ -135,7 +135,7 @@ class VoiceState:
                           ]
                 for name, value, inline in fields:
                     embed.add_field(name=name, value=value, inline=inline)
-                await self.channel.send(embed=embed)
+                await self.channel.send(embed=embed, delete_after=15)
                 self.guild.voice_client.play(self.current,
                                              after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
 
@@ -146,6 +146,7 @@ class VoiceState:
                                              after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set()))
             await self.next.wait()
             self.previous = self.current
+
 
 class Music(commands.Cog):
     def __init__(self, bot):
@@ -362,12 +363,50 @@ class Music(commands.Cog):
             if player.previous is not None and player.current != player.previous:
                 await player.queue.put(player.current)
                 player.current = player.previous
-                ctx.voice_client.stop()
                 await ctx.message.add_reaction('✅')
             else:
                 await ctx.message.add_reaction("❌")
         else:
             await ctx.send('Nothing being played at the moment.')
+
+    @commands.command(name="clearqueue", aliases=["clearQueue"])
+    async def clear_queue(self, ctx):
+        player = self.get_voice_state(ctx)
+        if player.queue.qsize() > 0:
+            player.queue.clear()
+            await ctx.message.reply("Queue successfully cleared.")
+        else:
+            await ctx.send("Queue is empty now")
+
+    @commands.command(name="nowplaying", aliases=["np"])
+    async def now_playing(self, ctx):
+        state = self.get_voice_state(ctx)
+        if not ctx.voice_client.is_playing():
+            await ctx.message.add_reaction("❌")
+            return await ctx.send('Nothing being played at the moment.')
+
+        embed = Embed(title="Now playing", colour=ctx.guild.owner.colour,
+                      timestamp=datetime.datetime.utcnow())
+        embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url)
+
+        embed.set_thumbnail(url=state.current.data["thumbnail"])
+        fields = [("Music", f"{state.current.title}", True),
+                  ("Author:", f"{state.current.data['channel']}", True),
+                  ]
+        for name, value, inline in fields:
+            embed.add_field(name=name, value=value, inline=inline)
+        await ctx.send(embed=embed, delete_after=10)
+
+    @commands.command(name="restart")
+    async def restart(self, ctx):
+        if not ctx.voice_client.is_playing():
+            await ctx.message.add_reaction("❌")
+            return await ctx.send('Nothing being played at the moment.')
+        player = self.get_voice_state(ctx)
+        current=player.current
+        await player.audio_player_task()
+        player.current=current
+
 
 
 def setup(client):
