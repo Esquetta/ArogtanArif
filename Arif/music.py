@@ -5,12 +5,13 @@ import random
 import time
 from functools import partial
 from typing import Optional
-
+import httpx
 import aiohttp
 import discord
 import youtube_dl
 from discord.ext import commands
 from discord import Embed
+from bs4 import BeautifulSoup
 import discord.errors
 
 youtube_dl.utils.bug_reports_message = lambda: ''
@@ -97,7 +98,8 @@ class SongQueue(asyncio.Queue):
 
 
 class VoiceState:
-    __slots__ = ('bot', 'guild', 'channel', 'cog', 'queue', 'next', 'current', 'volume', 'ctx', 'previous', 'loop')
+    __slots__ = (
+        'bot', 'guild', 'channel', 'cog', 'queue', 'next', 'current', 'volume', 'ctx', 'previous', 'loop', 'auto_play')
 
     def __init__(self, ctx):
         self.bot = ctx.bot
@@ -109,7 +111,7 @@ class VoiceState:
         self.next = asyncio.Event()
         self.previous = None
         self.loop = False
-
+        self.auto_play = False
         self.volume = .5
         self.current = None
 
@@ -117,14 +119,16 @@ class VoiceState:
 
     async def audio_player_task(self):
         while not self.bot.is_closed():
-            if self.loop == False:
+            if not self.loop:
                 self.next.clear()
                 self.current = await self.queue.get()
+                '''Hour/Min/Sec'''
                 total_seconds = self.current.data["duration"]
                 hours = (total_seconds - (total_seconds % 3600)) / 3600
                 seconds_minus_hours = (total_seconds - hours * 3600)
                 minutes = (seconds_minus_hours - (seconds_minus_hours % 60)) / 60
                 seconds = seconds_minus_hours - minutes * 60
+
                 embed = Embed(title="Now Playing", colour=self.guild.owner.colour,
                               timestamp=datetime.datetime.utcnow(),
                               description=f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬ {int(hours)}:{int(minutes)}:{int(seconds)}")
@@ -138,9 +142,7 @@ class VoiceState:
                 await self.channel.send(embed=embed, delete_after=15)
                 self.guild.voice_client.play(self.current,
                                              after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
-
-
-            elif self.loop == True:
+            elif self.loop:
                 self.current = discord.FFmpegPCMAudio(self.current.data['url'], **ffmpeg_options)
                 self.guild.voice_client.play(self.current,
                                              after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set()))
@@ -329,7 +331,7 @@ class Music(commands.Cog):
         player = self.get_voice_state(ctx)
         player.loop = not player.loop
         await ctx.message.add_reaction('✅')
-        await ctx.send("Autoplay is " + ('on' if player.loop else 'off'))
+        await ctx.send("Loop is " + ('on' if player.loop else 'off'))
         await ctx.send("When you use this command again loop is of.")
 
     @commands.command(name="lyrics", aliases=["Lyrics"])
@@ -359,13 +361,12 @@ class Music(commands.Cog):
     @commands.command(name="playprevious", aliases=["playLast"])
     async def play_previous(self, ctx):
         player = self.get_voice_state(ctx)
-        if ctx.voice_client.is_playing():
-            if player.previous is not None and player.current != player.previous:
-                await player.queue.put(player.current)
-                player.current = player.previous
-                await ctx.message.add_reaction('✅')
-            else:
-                await ctx.message.add_reaction("❌")
+        if ctx.voice_client.is_playing() and player.previous is not None:
+
+            await player.queue.put(player.previous)
+            await player.queue.put(player.current)
+            ctx.voice_client.stop()
+            await ctx.message.add_reaction('✅')
         else:
             await ctx.send('Nothing being played at the moment.')
 
@@ -396,17 +397,6 @@ class Music(commands.Cog):
         for name, value, inline in fields:
             embed.add_field(name=name, value=value, inline=inline)
         await ctx.send(embed=embed, delete_after=10)
-
-    @commands.command(name="restart")
-    async def restart(self, ctx):
-        if not ctx.voice_client.is_playing():
-            await ctx.message.add_reaction("❌")
-            return await ctx.send('Nothing being played at the moment.')
-        player = self.get_voice_state(ctx)
-        current=player.current
-        await player.audio_player_task()
-        player.current=current
-
 
 
 def setup(client):
