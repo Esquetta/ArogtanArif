@@ -73,7 +73,7 @@ class Information(commands.Cog):
                       timestamp=datetime.datetime.utcnow())
         embed.set_author(name='Help')
         embed.set_thumbnail(url=self.bot.user.avatar_url)
-        fields = [("Music", "play,pause,resume,join,disconnect", True),
+        fields = [("Music", "play,pause,resume,join,disconnect,nowplaying,skip,loop", True),
                   ("User", "userinfo or memberinfo,Svinfo or Svinfo", True),
                   ("Log", "setupLogChannel or LogChannelSetup  creates log text channel", True),
                   ("Game", "Rock-Paper-Scissors,CoinFlip", "True"),
