@@ -146,13 +146,9 @@ class VoiceState:
                 self.current = discord.FFmpegPCMAudio(self.current.data['url'], **ffmpeg_options)
                 self.guild.voice_client.play(self.current,
                                              after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
-            try:
-                await self.next.wait()
-                self.previous = self.current
-                self.current = None
-            except asyncio.TimeoutError:
-                self.ctx.disconnect()
-                return self.destroy(self.guild)
+            await self.next.wait()
+            self.previous = self.current
+            self.current = None
 
     def destroy(self, guild):
         """Disconnect and cleanup the player."""
@@ -372,19 +368,20 @@ class Music(commands.Cog):
         player = self.get_voice_state(ctx)
         player_queue = []
         if ctx.voice_client.is_playing() and player.previous is not None:
+            player_queue.append(player.previous)
+            player_queue.append(player.current)
             for item in player.queue:
                 player_queue.append(item)
             player.queue.clear()
-            await player.queue.put(player.previous)
-            await player.queue.put(player.current)
-            player.current = None
-            player.previous = None
+            ctx.voice_client.stop()
+
             for item in player_queue:
                 await player.queue.put(item)
             await ctx.message.add_reaction('✅')
+
+
         else:
             await ctx.send('Nothing being played at the moment.')
-        ctx.voice_client.stop()
 
     @commands.command(name="clearqueue", aliases=["clearQueue"])
     async def clear_queue(self, ctx):

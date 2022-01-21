@@ -67,6 +67,14 @@ class Information(commands.Cog):
         embed.add_field(name="Roles", value=",@".join([str(i.name) for i in ctx.guild.roles]))
         await ctx.send(embed=embed)
 
+    @commands.command(name="avatar", aliases=["Avatar"])
+    async def avatar(self, ctx, user: Optional[Member]):
+        user = user or ctx.author
+        embed = Embed(title=f"Avatar For {user.name}", colour=user.guild.owner.colour,
+                      timestamp=datetime.datetime.utcnow())
+        embed.set_image(url=user.avatar_url)
+        await ctx.send(embed=embed)
+
     @commands.group(invoke_without_command=True)
     async def help(self, ctx):
         embed = Embed(title="Commands ", description="Arif Commands List ", colour=ctx.author.colour,
