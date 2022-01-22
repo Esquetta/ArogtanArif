@@ -72,7 +72,23 @@ class Information(commands.Cog):
         user = user or ctx.author
         embed = Embed(title=f"Avatar For {user.name}", colour=user.guild.owner.colour,
                       timestamp=datetime.datetime.utcnow())
+        embed.add_field(name="Links",
+                        value=f"[png]({user.avatar_url_as(format=None, static_format='png')}),[jpeg]({user.avatar_url_as(format=None, static_format='jpeg')}),[webp]({user.avatar_url_as(format=None, static_format='webp')})",
+                        inline=True)
         embed.set_image(url=user.avatar_url)
+        await ctx.send(embed=embed)
+
+    @commands.command(name="roleinfo", aliases=["roleInfo,RoleInfo,Roleinfo"])
+    async def role_info(self, ctx, *, role: Optional[str]):
+        role = role or ctx.author.top_role
+        embed = Embed(title="Role Information", colour=role.colour, timestamp=datetime.datetime.utcnow())
+        fields = [("ID", role.id, True), ("Name", role.name, True), ("Color", role.color, True),
+                  ("Hoisted", role.hoist, True), ("Mentionable", role.mentionable, True),
+                  ("Role Created", role.created_at.strftime("%d.%m.%Y %H:%M:%S"), True),
+                  ("Position (from top)", f"({role.position}/{len(ctx.guild.roles)})", True),
+                  ("Permissions",f"{''.join([i[0] for i in role.permissions])}", True)]
+        for name, value, inline in fields:
+            embed.add_field(name=name, value=value, inline=inline)
         await ctx.send(embed=embed)
 
     @commands.group(invoke_without_command=True)
