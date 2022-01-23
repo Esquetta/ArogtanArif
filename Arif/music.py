@@ -119,9 +119,9 @@ class VoiceState:
 
     async def audio_player_task(self):
         while not self.bot.is_closed():
+            self.next.clear()
+            self.current = await self.queue.get()
             if not self.loop:
-                self.next.clear()
-                self.current = await self.queue.get()
                 '''Hour/Min/Sec'''
                 total_seconds = self.current.data["duration"]
                 hours = (total_seconds - (total_seconds % 3600)) / 3600

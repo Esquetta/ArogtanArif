@@ -1,4 +1,4 @@
-
+import datetime
 import os
 from discord import Embed
 from discord.ext import commands
@@ -48,6 +48,19 @@ class Game(commands.Cog):
             await ctx.send(embed=embed)
         else:
             embed = Embed(title="CoinFlip", description=f"{ctx.author.mention} Flipped coin, we got **Tails**!")
+            await ctx.send(embed=embed)
+    @commands.command(name="Bigtext",aliases=["bigtext"])
+    async def big_text(self,ctx,*,text:str):
+        input=text.lower()
+        regional_indicator_list=[]
+        for item in input:
+            regional_indicator_list.append(f":regional_indicator_{item}:")
+        await ctx.send("".join(regional_indicator_list))
+    @big_text.error
+    async def big_text_error(self,ctx,exc):
+        if isinstance(exc,Exception):
+            embed=Embed(title=" :x: Missing Argument",description="The text argument is required. \n Usage: Arif.bigtext <text>",colour=ctx.author.colour,timestamp=datetime.datetime.utcnow())
+            await ctx.message.add_reaction("❌")
             await ctx.send(embed=embed)
 
 
