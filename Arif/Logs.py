@@ -126,12 +126,16 @@ class Logs(commands.Cog):
                     await guild.text_channels[0].send(
                         f"Hello {guild.name}! I am {self.bot.user.display_name}. Thank you for inviting me.\n\nTo see "
                         f"what commands I have available type `Arif.help`.\n")
-                    Server=Get_Server(id=guild.id)
-                    if len(Server)>0:
+                    Server = Get_Server(id=guild.id)
+                    if len(Server) > 0:
                         print("Server and log channel detected")
-                        self.log_channel_id=Server[0][3]
+                        self.log_channel_id = Server[0][3]
         except PermissionError:
             pass
+
+    @commands.command(name="Say", aliases=["say"])
+    async def say(self, ctx,*,say: str):
+        await ctx.send(f"{say}")
 
 
 def setup(client):
