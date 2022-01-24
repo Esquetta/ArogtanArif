@@ -1,5 +1,7 @@
+import asyncio
 import datetime
-import os
+
+import discord
 from discord import Embed
 from discord.ext import commands
 import random
@@ -62,6 +64,40 @@ class Game(commands.Cog):
         if isinstance(exc, Exception):
             embed = Embed(title=" :x: Missing Argument",
                           description="The text argument is required. \n Usage: Arif.bigtext <text>",
+                          colour=ctx.author.colour, timestamp=datetime.datetime.utcnow())
+            await ctx.message.add_reaction("❌")
+            await ctx.send(embed=embed)
+
+    @commands.command(name="NumberGuess", aliases=["numberguess"])
+    async def number_guess(self, ctx):
+        number = random.randint(0, 101)
+        attempt_count = 5
+        await ctx.send("Welcome to number guess! \nNumber is between 0-100,You have 5 guessing.Good Luck")
+        await asyncio.sleep(1)
+        await ctx.send(f"{ctx.author.mention} Make your guess.")
+
+        def check(m: discord.Message):
+            return m.author == ctx.author
+
+        guess = await discord.ext.commands.Bot.wait_for(event='message', check=check, timeout=60.0)
+
+        while guess.content != number and attempt_count >= 1:
+            if guess.content > number:
+                await ctx.send("Your guess is higher than number.")
+                attempt_count -= 1
+            elif guess.content < number:
+                await ctx.send("Your guess is lowe than number.")
+                attempt_count -= 1
+            await ctx.send(f"{ctx.author.mention} Make your guess.")
+            guess = ctx.wait_for('message', check=check)
+        else:
+            await ctx.send(f"YOU WIN Number:{number}")
+
+    @number_guess.error
+    async def number_guess_error(self, ctx, exc):
+        if isinstance(exc, TypeError):
+            embed = Embed(title=" :x: Type Error",
+                          description="The you must enter numeric values",
                           colour=ctx.author.colour, timestamp=datetime.datetime.utcnow())
             await ctx.message.add_reaction("❌")
             await ctx.send(embed=embed)
