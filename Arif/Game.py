@@ -77,30 +77,45 @@ class Game(commands.Cog):
         await ctx.send(f"{ctx.author.mention} Make your guess.")
 
         def check(m: discord.Message):
-            return m.author == ctx.author
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
 
-        guess = await discord.ext.commands.Bot.wait_for(event='message', check=check, timeout=60.0)
-
-        while guess.content != number and attempt_count >= 1:
-            if guess.content > number:
-                await ctx.send("Your guess is higher than number.")
-                attempt_count -= 1
-            elif guess.content < number:
-                await ctx.send("Your guess is lowe than number.")
-                attempt_count -= 1
-            await ctx.send(f"{ctx.author.mention} Make your guess.")
-            guess = ctx.wait_for('message', check=check)
+        try:
+            msg = await self.bot.wait_for(event='message', check=check, timeout=60.0)
+            guess = int(msg.content)
+        except asyncio.TimeoutError:
+            await ctx.send(
+                f"**{ctx.author}**, you didn't send any guess that meets the check in this channel for 60 seconds..")
+            return
         else:
-            await ctx.send(f"YOU WIN Number:{number}")
+            while guess != number:
+                if guess > number and attempt_count >= 1:
+                    await ctx.send("Your guess is higher than number.")
+                    await ctx.send(f"Guessing:{attempt_count}")
+                    attempt_count -= 1
+                elif guess < number and attempt_count >= 1:
+                    await ctx.send("Your guess is lower than number.")
+                    await ctx.send(f"Guessing:{attempt_count}")
+                    attempt_count -= 1
+                else:
+                    await ctx.send("You're out of guessing.")
+                    await ctx.send(f"Number:{number}")
+                    break
+                await ctx.send(f"{ctx.author.mention} Make your guess.")
+                try:
+                    msg = await self.bot.wait_for(event='message', check=check, timeout=60.0)
+                    guess = int(msg.content)
+                except asyncio.TimeoutError:
+                    await ctx.send(
+                        f"**{ctx.author}**, you didn't send anyg guess that meets the check in this channel for 60 seconds..")
+                    return
+            else:
+                await ctx.send(f"**YOU WIN {ctx.author} \nNumber:{number}**")
 
     @number_guess.error
     async def number_guess_error(self, ctx, exc):
-        if isinstance(exc, TypeError):
-            embed = Embed(title=" :x: Type Error",
-                          description="The you must enter numeric values",
-                          colour=ctx.author.colour, timestamp=datetime.datetime.utcnow())
+        if isinstance(exc, Exception):
             await ctx.message.add_reaction("❌")
-            await ctx.send(embed=embed)
+            await ctx.send("You must enter numeric value.")
 
 
 def setup(client):
