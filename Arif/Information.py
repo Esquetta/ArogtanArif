@@ -81,12 +81,16 @@ class Information(commands.Cog):
     @commands.command(name="roleinfo", aliases=["roleInfo,RoleInfo,Roleinfo"])
     async def role_info(self, ctx, *, role: Optional[str]):
         role = role or ctx.author.top_role
+        permissions = []
+        for i in role.permissions:
+            item = " ".join(i[0].split('_'))
+            permissions.append(f"**`{item.capitalize()}`**'")
         embed = Embed(title="Role Information", colour=role.colour, timestamp=datetime.datetime.utcnow())
         fields = [("ID", role.id, True), ("Name", role.name, True), ("Color", role.color, True),
                   ("Hoisted", role.hoist, True), ("Mentionable", role.mentionable, True),
                   ("Role Created", role.created_at.strftime("%d.%m.%Y %H:%M:%S"), True),
                   ("Position (from top)", f"({role.position}/{len(ctx.guild.roles)})", True),
-                  ("Permissions",f"{''.join([i[0] for i in role.permissions])}", True)]
+                  ("Permissions", f"{''.join([i for i in permissions])}", True)]
         for name, value, inline in fields:
             embed.add_field(name=name, value=value, inline=inline)
         await ctx.send(embed=embed)
@@ -97,11 +101,12 @@ class Information(commands.Cog):
                       timestamp=datetime.datetime.utcnow())
         embed.set_author(name='Help')
         embed.set_thumbnail(url=self.bot.user.avatar_url)
-        fields = [("Music", "play,pause,resume,join,disconnect,nowplaying,skip,loop", True),
-                  ("User", "userinfo or memberinfo,Svinfo or Svinfo", True),
-                  ("Log", "setupLogChannel or LogChannelSetup  creates log text channel", True),
-                  ("Game", "Rock-Paper-Scissors,CoinFlip,NumberGuess", "True"),
-                  ("Fun", "Gif", "True"),
+        fields = [("Music:musical_note: ",
+                   "play,pause,resume,join,disconnect,nowplaying,skip,loop,lyrics,shuffle,playlist,removequeue", True),
+                  ("User:mens:", "userinfo,Svinfo,avatar,roleinfo", True),
+                  ("Log:pencil: ", "setupLogChannel or LogChannelSetup  creates log text channel", True),
+                  ("Game:game_die: ", "Rock-Paper-Scissors,CoinFlip,NumberGuess", "True"),
+                  ("Fun:tada:", "Gif", "True"),
                   ("More", "Arif.help 'command name' extented help with specified command.", "True")
 
                   ]
@@ -188,6 +193,32 @@ class Information(commands.Cog):
         embed.add_field(name="Info",
                         value="Arif.RockPaperScissors 'and your choice' after bot return his choice and who is winner.",
                         inline=True)
+        await  ctx.send(embed=embed)
+
+    @help.command(name="lyrics")
+    async def lyrics(self, ctx):
+        embed = Embed(title="Lyrics",
+                      description="Returns current music lyrics if not text length is high.İf  text length is high returns to you lyrics link.",
+                      colour=ctx.author.colour,
+                      timestamp=datetime.datetime.utcnow())
+        embed.add_field(name="Usage", value="Arif.lyrics", inline=True)
+        await  ctx.send(embed=embed)
+
+    @help.command(name="loop")
+    async def loop(self, ctx):
+        embed = Embed(title="Loop",
+                      description="Start loop a current music,when used this command second time loop is turned off.",
+                      colour=ctx.author.colour,
+                      timestamp=datetime.datetime.utcnow())
+        embed.add_field(name="Usage", value="Arif.loop", inline=True)
+        await  ctx.send(embed=embed)
+
+    @help.command(name="shuffle")
+    async def shuffle(self, ctx):
+        embed = Embed(title="Loop",
+                      description="Shuffles the queue if queue not empty.",
+                      colour=ctx.author.colour,
+                      timestamp=datetime.datetime.utcnow())
         await  ctx.send(embed=embed)
 
 
