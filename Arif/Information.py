@@ -117,33 +117,34 @@ class Information(commands.Cog):
 
     @help.command(name="play")
     async def play(self, ctx):
-        embed = Embed(title="Play", description="Play usage", colour=ctx.author.colour,
+        embed = Embed(description="Plays a song", colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
         embed.set_author(name="Play")
-        embed.add_field(name="Exp", value="Arif.play or Arif.sing 'youtube link'", inline=True)
+        embed.add_field(name="Usage", value="**`Arif.play 'youtube link' or name of song `**", inline=True)
+        embed.add_field(name="Aliases",value="**`Sing,p`**",inline=True)
+        embed.add_field(name="Example", value="**`Arif.play logic ballin`** ", inline=True)
+
         await  ctx.send(embed=embed)
 
     @help.command(name="pause")
     async def pause(self, ctx):
-        embed = Embed(title="Pause", description="Pause usage", colour=ctx.author.colour,
+        embed = Embed(description="**`Bot returns message if music paused successfully.`**", colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
         embed.set_author(name="Pause")
-        embed.add_field(name="Exp", value="Arif.pause or Arif.stop", inline=True)
-        embed.add_field(name="Return", value="Bot returns message if music paused successfully.", inline=True)
+        embed.add_field(name="Exp", value="**`Arif.pause or Arif.stop`**", inline=True)
         await  ctx.send(embed=embed)
 
     @help.command(name="resume")
     async def resume(self, ctx):
-        embed = Embed(title="Resume", description="Resume usage", colour=ctx.author.colour,
+        embed = Embed(description="**`Bot returns message if music resumed successfully.`**", colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
         embed.set_author(name="Resume")
         embed.add_field(name="Exp", value="Arif.resume", inline=True)
-        embed.add_field(name="Return", value="Bot returns message if music resumed successfully.", inline=True)
         await  ctx.send(embed=embed)
 
     @help.command(name="disconnect")
     async def disconnect(self, ctx):
-        embed = Embed(title="disconnect", description="Disconnect usage", colour=ctx.author.colour,
+        embed = Embed(description="Disconnect usage", colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
         embed.set_author(name="Disconnect")
         embed.add_field(name="Exp", value="Arif.disconnect or Arif.leave", inline=True)
@@ -152,7 +153,7 @@ class Information(commands.Cog):
 
     @help.command(name="userinfo")
     async def user_Info(self, ctx):
-        embed = Embed(title="userinfo", description="userinfo usage", colour=ctx.author.colour,
+        embed = Embed(description="userinfo usage", colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
         embed.set_author(name="Disconnect")
         embed.add_field(name="Exp", value="Arif.userinfo or Arif.memberinfo", inline=True)
@@ -165,7 +166,7 @@ class Information(commands.Cog):
 
     @help.command(name="SvInfo")
     async def sv_Info(self, ctx):
-        embed = Embed(title="SvInfo", description="svinfo usage", colour=ctx.author.colour,
+        embed = Embed(description="svinfo usage", colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
         embed.set_author(name="SvInfo")
         embed.add_field(name="Exp", value="Arif.SvInfo or Arif.vInfo", inline=True)
@@ -175,7 +176,7 @@ class Information(commands.Cog):
 
     @help.command(name="setupLogChannel")
     async def setupLogChannel(self, ctx):
-        embed = Embed(title="setupLogChannel", description="setupLogChannel usage", colour=ctx.author.colour,
+        embed = Embed(description="setupLogChannel usage", colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
         embed.set_author(name="Disconnect")
         embed.add_field(name="Exp", value="Arif.SvInfo or Arif.vInfo", inline=True)
@@ -186,7 +187,7 @@ class Information(commands.Cog):
 
     @help.command(name="RockPaperScissors")
     async def RockPaperScissor(self, ctx):
-        embed = Embed(title="Rock-Paper-Scissors", description="Rock-Paper-Scissors usage", colour=ctx.author.colour,
+        embed = Embed(description="Rock-Paper-Scissors usage", colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
         embed.set_author(name="Game")
         embed.add_field(name="Exp", value="Arif.RockPaperScissors", inline=True)

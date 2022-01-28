@@ -97,9 +97,11 @@ class SongQueue(asyncio.Queue):
         del self._queue[index]
 
 
+
+
 class VoiceState:
     __slots__ = (
-        'bot', 'guild', 'channel', 'cog', 'queue', 'next', 'current', 'volume', 'ctx', 'previous', 'loop', 'auto_play')
+        'bot', 'guild', 'channel', 'cog', 'queue', 'next', 'current', 'volume', 'ctx', 'previous', 'loop', 'auto_play','requester')
 
     def __init__(self, ctx):
         self.bot = ctx.bot
@@ -114,6 +116,7 @@ class VoiceState:
         self.auto_play = False
         self.volume = .5
         self.current = None
+        self.requester=ctx.author
 
         ctx.bot.loop.create_task(self.audio_player_task())
 
@@ -139,9 +142,10 @@ class VoiceState:
                           ]
                 for name, value, inline in fields:
                     embed.add_field(name=name, value=value, inline=inline)
-                await self.channel.send(embed=embed, delete_after=15)
+                embed.set_footer(text=self.requester.name, icon_url=self.requester.avatar_url)
                 self.guild.voice_client.play(self.current,
                                              after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
+                await self.channel.send(embed=embed, delete_after=15)
             elif self.loop:
                 self.current = discord.FFmpegPCMAudio(self.current.data['url'], **ffmpeg_options)
                 self.guild.voice_client.play(self.current,
@@ -203,7 +207,7 @@ class Music(commands.Cog):
         except AttributeError:
             await  ctx.send("I can't disconnect because I'm not connected to an voice channel.")
 
-    @commands.command(name="play", help="Arif plays a music.", aliases=["sing"], pass_context=True, no_pm=True)
+    @commands.command(name="play", help="Arif plays a music.", aliases=["sing,p"], pass_context=True, no_pm=True)
     async def play(self, ctx, *, url):
         if ctx.author.voice is None:
             await  ctx.send("Connect a voice channel.")
@@ -229,7 +233,7 @@ class Music(commands.Cog):
                 await ctx.send(embed=embed, delete_after=10)
             await state.queue.put(player)
 
-    @commands.command(name="resume", help="Arif continues stopped music.", aliases=["devam"], pass_context=True)
+    @commands.command(name="resume", help="Arif continues stopped music.", aliases=["continue"], pass_context=True)
     async def resume(self, ctx):
         try:
             if ctx.voice_client.is_paused():
