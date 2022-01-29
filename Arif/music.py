@@ -125,27 +125,10 @@ class VoiceState:
             self.next.clear()
             self.current = await self.queue.get()
             if not self.loop:
-                '''Hour/Min/Sec'''
-                total_seconds = self.current.data["duration"]
-                hours = (total_seconds - (total_seconds % 3600)) / 3600
-                seconds_minus_hours = (total_seconds - hours * 3600)
-                minutes = (seconds_minus_hours - (seconds_minus_hours % 60)) / 60
-                seconds = seconds_minus_hours - minutes * 60
 
-                embed = Embed(title="Now Playing", colour=self.guild.owner.colour,
-                              timestamp=datetime.datetime.utcnow(),
-                              description=f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬ {int(hours)}:{int(minutes)}:{int(seconds)}")
-                embed.set_thumbnail(url=self.current.data["thumbnail"])
-                fields = [("Music", f"{self.current.title}", True),
-                          ("Author:", f"{self.current.data['channel']}", True),
-                          ("Volume:", f"{int((self.volume * 100))}/150", True),
-                          ]
-                for name, value, inline in fields:
-                    embed.add_field(name=name, value=value, inline=inline)
-                embed.set_footer(text=self.requester.name, icon_url=self.requester.avatar_url)
                 self.guild.voice_client.play(self.current,
                                              after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
-                await self.channel.send(embed=embed, delete_after=15)
+                await self.channel.send(embed=self.create_embed(), delete_after=15)
             elif self.loop:
                 self.current = discord.FFmpegPCMAudio(self.current.data['url'], **ffmpeg_options)
                 self.guild.voice_client.play(self.current,
@@ -157,7 +140,26 @@ class VoiceState:
     def destroy(self, guild):
         """Disconnect and cleanup the player."""
         return self.bot.loop.create_task(self.cog.cleanup(guild))
+    def create_embed(self):
+        '''Hour/Min/Sec'''
+        total_seconds = self.current.data["duration"]
+        hours = (total_seconds - (total_seconds % 3600)) / 3600
+        seconds_minus_hours = (total_seconds - hours * 3600)
+        minutes = (seconds_minus_hours - (seconds_minus_hours % 60)) / 60
+        seconds = seconds_minus_hours - minutes * 60
 
+        embed = Embed(title="Now Playing", colour=self.guild.owner.colour,
+                      timestamp=datetime.datetime.utcnow(),
+                      description=f"▬▬▬▬▬▬▬▬▬▬▬▬▬▬ {int(hours)}:{int(minutes)}:{int(seconds)}")
+        embed.set_thumbnail(url=self.current.data["thumbnail"])
+        fields = [("Music", f"{self.current.title}", True),
+                  ("Author:", f"{self.current.data['channel']}", True),
+                  ("Volume:", f"{int((self.volume * 100))}/150", True),
+                  ]
+        for name, value, inline in fields:
+            embed.add_field(name=name, value=value, inline=inline)
+        embed.set_footer(text=self.requester.name, icon_url=self.requester.avatar_url)
+        return embed
 
 class Music(commands.Cog):
     def __init__(self, bot):
@@ -402,18 +404,7 @@ class Music(commands.Cog):
         if not ctx.voice_client.is_playing():
             await ctx.message.add_reaction("❌")
             return await ctx.send('Nothing being played at the moment.')
-
-        embed = Embed(title="Now playing", colour=ctx.guild.owner.colour,
-                      timestamp=datetime.datetime.utcnow())
-        embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url)
-
-        embed.set_thumbnail(url=state.current.data["thumbnail"])
-        fields = [("Music", f"{state.current.title}", True),
-                  ("Author:", f"{state.current.data['channel']}", True),
-                  ]
-        for name, value, inline in fields:
-            embed.add_field(name=name, value=value, inline=inline)
-        await ctx.send(embed=embed, delete_after=10)
+        await ctx.send(embed=state.create_embed())
 
 
 def setup(client):
