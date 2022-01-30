@@ -144,7 +144,7 @@ class Information(commands.Cog):
 
     @help.command(name="disconnect")
     async def disconnect(self, ctx):
-        embed = Embed(description="**`Disconnect usage`**", colour=ctx.author.colour,
+        embed = Embed(description="**`Arif leaves voice channel**", colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
         embed.set_author(name="Disconnect")
         embed.add_field(name="Exp", value="**`Arif.disconnect`**", inline=True)
@@ -153,24 +153,20 @@ class Information(commands.Cog):
 
     @help.command(name="userinfo")
     async def user_Info(self, ctx):
-        embed = Embed(description="**`Userinfo usage`**", colour=ctx.author.colour,
+        embed = Embed(description="Userinfo", colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
-        embed.add_field(name="**`Usage`**", value="**`Arif.userinfo`**", inline=True)
-        embed.add_field(name="Return", value="**`If you dont give a user (Arif.userinfo) return your account information.`**",
-                        inline=True)
+        embed.add_field(name="Usage", value="**`Arif.userinfo`**", inline=True)
         embed.add_field(name="Return",
-                        value="**`If you dont give a user (Arif.userinfo @Me) return specified user  account information.`**",
+                        value="**`If you dont give a user return info about you.(Arif.userinfo @Arog'tan Arif) return specified user  account information.`**",
                         inline=True)
         await  ctx.send(embed=embed)
 
     @help.command(name="SvInfo")
     async def sv_Info(self, ctx):
-        embed = Embed(description="**`Svinfo usage`**", colour=ctx.author.colour,
+        embed = Embed(description="**`Server information`**", colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
         embed.set_author(name="SvInfo")
         embed.add_field(name="**`Usage`**", value="**`Arif.SvInfo or Arif.vInfo`**", inline=True)
-        embed.add_field(name="Return", value="**`If you dont give a user (Arif.SvInfo) return your server information.`**",
-                        inline=True)
         await  ctx.send(embed=embed)
 
     @help.command(name="setupLogChannel")
@@ -186,37 +182,63 @@ class Information(commands.Cog):
 
     @help.command(name="RockPaperScissors")
     async def RockPaperScissor(self, ctx):
-        embed = Embed(description="**`Rock-Paper-Scissors usage`**", colour=ctx.author.colour,
+        embed = Embed(description="**`Rock-Paper-Scissors Game`**", colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
-        embed.set_author(name="**`Game`**")
+        embed.set_author(name="Game")
         embed.add_field(name="Usage", value="**`Arif.RockPaperScissors 'and your choice' after bot return his choice and who is winner.`**", inline=True)
         await  ctx.send(embed=embed)
 
     @help.command(name="lyrics")
     async def lyrics(self, ctx):
-        embed = Embed(title="Lyrics",
-                      description="Returns current music lyrics if not text length is high.İf  text length is high returns to you lyrics link.",
+        embed = Embed(
+                      description="**`Returns current music lyrics if not text length is high.İf  text length is high returns to you lyrics link.`**",
                       colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
         embed.add_field(name="**`Usage`**", value="**`Arif.lyrics`**", inline=True)
-        embed.set_author(name="**`Lyrics`**")
+        embed.set_author(name="Lyrics")
         await  ctx.send(embed=embed)
 
     @help.command(name="loop")
     async def loop(self, ctx):
-        embed = Embed(title="**`Loop`**",
+        embed = Embed(
                       description="**`Start loop a current music,when used this command second time loop is turned off.`**",
                       colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
         embed.add_field(name="**`Usage`**", value="**`Arif.loop`**", inline=True)
+        embed.set_author(name="Loop")
         await  ctx.send(embed=embed)
 
     @help.command(name="shuffle")
     async def shuffle(self, ctx):
-        embed = Embed(title="Loop",
-                      description="Shuffles the queue if queue not empty.",
+        embed = Embed(
+                      description="**`Shuffles the queue if queue not empty.`**",
                       colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
+        embed.set_author(name="Shuffle")
+        embed.add_field(name="**`Usage`**", value="**`Arif.shuffle`**", inline=True)
+
+        await  ctx.send(embed=embed)
+
+    @help.command(name="queue")
+    async def shuffle(self, ctx):
+        embed = Embed(
+            description="**`List of queued songs`**",
+            colour=ctx.author.colour,
+            timestamp=datetime.datetime.utcnow())
+        embed.set_author(name="Queue")
+        embed.add_field(name="**`Usage`**", value="**`Arif.queue`**", inline=True)
+        embed.add_field(name="**`Aliases`**", value="**`Arif.playlist`**", inline=True)
+
+        await  ctx.send(embed=embed)
+
+    @help.command(name="removefromqueue")
+    async def shuffle(self, ctx):
+        embed = Embed(
+            description="**`Removes the numbered song from the queue.`**",
+            colour=ctx.author.colour,
+            timestamp=datetime.datetime.utcnow())
+        embed.set_author(name="Remove from Queue")
+        embed.add_field(name="**`Usage`**", value="Arif.removequeue <number 1-:infinity:>", inline=True)
 
         await  ctx.send(embed=embed)
 

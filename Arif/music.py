@@ -9,6 +9,7 @@ import httpx
 import aiohttp
 import discord
 import youtube_dl
+from async_timeout import timeout
 from discord.ext import commands
 from discord import Embed
 from bs4 import BeautifulSoup
@@ -97,11 +98,10 @@ class SongQueue(asyncio.Queue):
         del self._queue[index]
 
 
-
-
 class VoiceState:
     __slots__ = (
-        'bot', 'guild', 'channel', 'cog', 'queue', 'next', 'current', 'volume', 'ctx', 'previous', 'loop', 'auto_play','requester')
+        'bot', 'guild', 'channel', 'cog', 'queue', 'next', 'current', 'volume', 'ctx', 'previous', 'loop', 'auto_play',
+        'requester', 'song_history')
 
     def __init__(self, ctx):
         self.bot = ctx.bot
@@ -116,14 +116,23 @@ class VoiceState:
         self.auto_play = False
         self.volume = .5
         self.current = None
-        self.requester=ctx.author
+        self.requester = ctx.author
+        self.song_history = SongQueue()
 
         ctx.bot.loop.create_task(self.audio_player_task())
+
 
     async def audio_player_task(self):
         while not self.bot.is_closed():
             self.next.clear()
-            self.current = await self.queue.get()
+            try:
+                async with timeout(180):
+                    self.current = await self.queue.get()
+            except asyncio.TimeoutError:
+                self.queue.clear()
+                self.ctx.voice_client.disconnect()
+                self.destroy(self.guild)
+                return
             if not self.loop:
 
                 self.guild.voice_client.play(self.current,
@@ -134,12 +143,14 @@ class VoiceState:
                 self.guild.voice_client.play(self.current,
                                              after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
             await self.next.wait()
+            await self.song_history.put(self.current)
             self.previous = self.current
             self.current = None
 
     def destroy(self, guild):
         """Disconnect and cleanup the player."""
         return self.bot.loop.create_task(self.cog.cleanup(guild))
+
     def create_embed(self):
         '''Hour/Min/Sec'''
         total_seconds = self.current.data["duration"]
@@ -160,6 +171,7 @@ class VoiceState:
             embed.add_field(name=name, value=value, inline=inline)
         embed.set_footer(text=self.requester.name, icon_url=self.requester.avatar_url)
         return embed
+
 
 class Music(commands.Cog):
     def __init__(self, bot):
@@ -292,6 +304,19 @@ class Music(commands.Cog):
             await ctx.message.add_reaction("❌")
             return await ctx.send("There are currently no more queued song.")
         player_queue = list(itertools.islice(player.queue._queue, 0, 5))
+        fmt = '\n'.join(f'**`{item.data["title"]}`**' for item in player_queue)
+        embed = discord.Embed(title=f'Upcoming - Next {len(player_queue)}', description=fmt,
+                              colour=ctx.guild.owner.colour)
+
+        await ctx.send(embed=embed)
+
+    @commands.command(name="history", aliases=["shistory"])
+    async def song_history(self, ctx):
+        player = self.get_voice_state(ctx)
+        if player.queue.empty():
+            await ctx.message.add_reaction("❌")
+            return await ctx.send("There are currently no more played song here.")
+        player_queue = list(itertools.islice(player.song_history._queue, 0, 5))
         fmt = '\n'.join(f'**`{item.data["title"]}`**' for item in player_queue)
         embed = discord.Embed(title=f'Upcoming - Next {len(player_queue)}', description=fmt,
                               colour=ctx.guild.owner.colour)
