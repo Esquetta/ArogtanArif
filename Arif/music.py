@@ -5,15 +5,14 @@ import random
 import time
 from functools import partial
 from typing import Optional
-import httpx
+
 import aiohttp
 import discord
+import discord.errors
 import youtube_dl
 from async_timeout import timeout
-from discord.ext import commands
 from discord import Embed
-from bs4 import BeautifulSoup
-import discord.errors
+from discord.ext import commands
 
 youtube_dl.utils.bug_reports_message = lambda: ''
 
@@ -153,6 +152,7 @@ class VoiceState:
 
     def create_embed(self):
         '''Hour/Min/Sec'''
+
         total_seconds = self.current.data["duration"]
         hours = (total_seconds - (total_seconds % 3600)) / 3600
         seconds_minus_hours = (total_seconds - hours * 3600)

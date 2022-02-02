@@ -121,7 +121,7 @@ class Information(commands.Cog):
                       timestamp=datetime.datetime.utcnow())
         embed.set_author(name="Play")
         embed.add_field(name="Usage", value="**`Arif.play 'youtube link' or name of song `**", inline=True)
-        embed.add_field(name="Aliases",value="**`Sing,p`**",inline=True)
+        embed.add_field(name="Aliases", value="**`Sing,p`**", inline=True)
         embed.add_field(name="Example", value="**`Arif.play logic ballin`** ", inline=True)
 
         await  ctx.send(embed=embed)
@@ -185,15 +185,17 @@ class Information(commands.Cog):
         embed = Embed(description="**`Rock-Paper-Scissors Game`**", colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
         embed.set_author(name="Game")
-        embed.add_field(name="Usage", value="**`Arif.RockPaperScissors 'and your choice' after bot return his choice and who is winner.`**", inline=True)
+        embed.add_field(name="Usage",
+                        value="**`Arif.RockPaperScissors 'and your choice' after bot return his choice and who is winner.`**",
+                        inline=True)
         await  ctx.send(embed=embed)
 
     @help.command(name="lyrics")
     async def lyrics(self, ctx):
         embed = Embed(
-                      description="**`Returns current music lyrics if not text length is high.İf  text length is high returns to you lyrics link.`**",
-                      colour=ctx.author.colour,
-                      timestamp=datetime.datetime.utcnow())
+            description="**`Returns current music lyrics if not text length is high.İf  text length is high returns to you lyrics link.`**",
+            colour=ctx.author.colour,
+            timestamp=datetime.datetime.utcnow())
         embed.add_field(name="**`Usage`**", value="**`Arif.lyrics`**", inline=True)
         embed.set_author(name="Lyrics")
         await  ctx.send(embed=embed)
@@ -201,9 +203,9 @@ class Information(commands.Cog):
     @help.command(name="loop")
     async def loop(self, ctx):
         embed = Embed(
-                      description="**`Start loop a current music,when used this command second time loop is turned off.`**",
-                      colour=ctx.author.colour,
-                      timestamp=datetime.datetime.utcnow())
+            description="**`Start loop a current music,when used this command second time loop is turned off.`**",
+            colour=ctx.author.colour,
+            timestamp=datetime.datetime.utcnow())
         embed.add_field(name="**`Usage`**", value="**`Arif.loop`**", inline=True)
         embed.set_author(name="Loop")
         await  ctx.send(embed=embed)
@@ -211,9 +213,9 @@ class Information(commands.Cog):
     @help.command(name="shuffle")
     async def shuffle(self, ctx):
         embed = Embed(
-                      description="**`Shuffles the queue if queue not empty.`**",
-                      colour=ctx.author.colour,
-                      timestamp=datetime.datetime.utcnow())
+            description="**`Shuffles the queue if queue not empty.`**",
+            colour=ctx.author.colour,
+            timestamp=datetime.datetime.utcnow())
         embed.set_author(name="Shuffle")
         embed.add_field(name="**`Usage`**", value="**`Arif.shuffle`**", inline=True)
 
@@ -241,6 +243,16 @@ class Information(commands.Cog):
         embed.add_field(name="**`Usage`**", value="Arif.removequeue <number 1-:infinity:>", inline=True)
 
         await  ctx.send(embed=embed)
+
+    @help.command(name="skip")
+    async def skip(self, ctx):
+        embed = Embed(
+            description="**`If there is a next song.Arif skips current song.`**",
+            colour=ctx.author.colour,
+            timestamp=datetime.datetime.utcnow())
+        embed.set_author(name="Skip")
+        embed.add_field(name="**`Usage`**", value="**`Arif.skip´**", inline=True)
+        await ctx.send(embed=embed)
 
 
 def setup(client):
