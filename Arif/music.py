@@ -13,6 +13,9 @@ import youtube_dl
 from async_timeout import timeout
 from discord import Embed
 from discord.ext import commands
+from discord_ui import UI, Button, ButtonStyle, LinkButton, components
+from discord import View
+
 
 youtube_dl.utils.bug_reports_message = lambda: ''
 
@@ -119,7 +122,6 @@ class VoiceState:
         self.song_history = SongQueue()
 
         ctx.bot.loop.create_task(self.audio_player_task())
-
 
     async def audio_player_task(self):
         while not self.bot.is_closed():
@@ -313,12 +315,12 @@ class Music(commands.Cog):
     @commands.command(name="history", aliases=["shistory"])
     async def song_history(self, ctx):
         player = self.get_voice_state(ctx)
-        if player.queue.empty():
+        if player.song_history.empty():
             await ctx.message.add_reaction("❌")
             return await ctx.send("There are currently no more played song here.")
         player_queue = list(itertools.islice(player.song_history._queue, 0, 5))
         fmt = '\n'.join(f'**`{item.data["title"]}`**' for item in player_queue)
-        embed = discord.Embed(title=f'Upcoming - Next {len(player_queue)}', description=fmt,
+        embed = discord.Embed(title=f'Recently Played Songs - Played {len(player_queue)}', description=fmt,
                               colour=ctx.guild.owner.colour)
 
         await ctx.send(embed=embed)
@@ -426,10 +428,18 @@ class Music(commands.Cog):
     @commands.command(name="nowplaying", aliases=["np"])
     async def now_playing(self, ctx):
         state = self.get_voice_state(ctx)
+
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+
         if not ctx.voice_client.is_playing():
             await ctx.message.add_reaction("❌")
             return await ctx.send('Nothing being played at the moment.')
-        await ctx.send(embed=state.create_embed())
+        button1 = Button(label="Pause",color=ButtonStyle.Secondary, emoji="⏹")
+        view=View()
+        view.add_item(button1)
+
+        await ctx.send(embed=state.create_embed(),view=view)
 
 
 def setup(client):
