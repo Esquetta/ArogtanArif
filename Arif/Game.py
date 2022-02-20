@@ -117,6 +117,11 @@ class Game(commands.Cog):
             await ctx.message.add_reaction("❌")
             await ctx.send("You must enter numeric value.")
 
+    @commands.command(name="RollDice")
+    async def Roll_Dice(self, ctx):
+        dice = ["one", "two", "three", "four", "five", "six"]
+        await ctx.send(f":{random.choice(dice)}:")
+
 
 def setup(client):
     client.add_cog(Game(client))

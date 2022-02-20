@@ -13,9 +13,6 @@ import youtube_dl
 from async_timeout import timeout
 from discord import Embed
 from discord.ext import commands
-from discord_ui import UI, Button, ButtonStyle, LinkButton, components
-from discord import View
-
 
 youtube_dl.utils.bug_reports_message = lambda: ''
 
@@ -435,11 +432,8 @@ class Music(commands.Cog):
         if not ctx.voice_client.is_playing():
             await ctx.message.add_reaction("❌")
             return await ctx.send('Nothing being played at the moment.')
-        button1 = Button(label="Pause",color=ButtonStyle.Secondary, emoji="⏹")
-        view=View()
-        view.add_item(button1)
 
-        await ctx.send(embed=state.create_embed(),view=view)
+        await ctx.send(embed=state.create_embed())
 
 
 def setup(client):
