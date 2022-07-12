@@ -33,6 +33,10 @@ class Information(commands.Cog):
 
         await  ctx.send(embed=embedInfo)
 
+    @commands.command(name="Ping", aliases=["ping"])
+    async def ping(self,ctx):
+        await ctx.send(f"Pong! {round(ctx.bot.latency * 1000)}ms")
+
     @commands.command(name="SvInfo", help="Shows server info.", aliases=["svinfo"])
     async def server_info(self, ctx):
         embed = discord.Embed(title="Server Information", colour=ctx.guild.owner.colour,

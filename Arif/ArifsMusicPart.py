@@ -1,5 +1,4 @@
-import asyncio
-import random
+
 
 import discord
 from discord.ext import commands
@@ -26,6 +25,9 @@ client.remove_command("help")
 @client.event
 async def on_ready():
     print("Bot online")
+
+
+
 
 
 for i in range(len(cogs)):
