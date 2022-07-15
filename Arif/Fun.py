@@ -9,6 +9,7 @@ from discord.ext import commands
 
 lmt = 15
 tenor_key = os.getenv("TENOR_KEY")
+unsplash_key = os.getenv("UNSPLASH_KEY")
 
 
 class Fun(commands.Cog):
@@ -33,6 +34,17 @@ class Fun(commands.Cog):
             if r.status_code == 200:
                 top_8gifts_first = json.loads(r.content)
                 await ctx.send(f"{top_8gifts_first['results'][random.randint(0, 15)]['url']}")
+
+    @commands.command(name="Photo", aliases=["photo"])
+    async def SendPhoto(self, ctx, *, filter: Optional[str]):
+        query = filter or ""
+        if query is not None:
+            r = requests.get(f"https://api.unsplash.com/search/photos/?query={query}",
+                             headers={'Authorization': f'Client-ID {unsplash_key}'})
+            if r.status_code == 200:
+                image = json.loads(r.content)
+                await  ctx.send(image)
+
 
 
 def setup(client):
