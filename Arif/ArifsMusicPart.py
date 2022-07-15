@@ -10,9 +10,9 @@ import Logs
 import Game
 from flaskserver import live
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv,find_dotenv
 
-load_dotenv()
+load_dotenv(find_dotenv())
 token = os.getenv("DISCORD_TOKEN")
 prefix = "Arif."
 OWNER_IDS = [276761363022479361]
