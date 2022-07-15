@@ -106,8 +106,8 @@ class Information(commands.Cog):
         embed.set_author(name='Help')
         embed.set_thumbnail(url=self.bot.user.avatar_url)
         fields = [("Music:musical_note: ",
-                   "play,pause,resume,join,disconnect,nowplaying,skip,loop,lyrics,shuffle,playlist,removequeue", True),
-                  ("User:mens:", "userinfo,Svinfo,avatar,roleinfo", True),
+                   "play,pause,resume,join,disconnect,nowplaying,skip,loop,lyrics,shuffle,playlist,removequeue,lyrics", True),
+                  ("Info:information_source:", "userinfo,Svinfo,avatar,roleinfo,ping", True),
                   ("Log:pencil: ", "setupLogChannel or LogChannelSetup  creates log text channel", True),
                   ("Game:game_die: ", "Rock-Paper-Scissors,CoinFlip,NumberGuess", "True"),
                   ("Fun:tada:", "Gif", "True"),

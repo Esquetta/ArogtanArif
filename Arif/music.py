@@ -202,8 +202,9 @@ class Music(commands.Cog):
     async def join(self, ctx):
         if ctx.author.voice is None:
             await  ctx.send("You must be connected a voice channel for use this command.")
-        voice_channel = ctx.author.voice.channel
 
+
+        voice_channel = ctx.author.voice.channel
         if ctx.voice_client is None:
             await  voice_channel.connect()
         else:
@@ -233,8 +234,9 @@ class Music(commands.Cog):
         try:
             player = await YTDLSource.from_url(url, loop=self.bot.loop)
         except Exception as exc:
-            ms = f'An error occurred while processing this request: ```py\n{type(exc).__name__}: {exc}\n```'
+            ms = f'An error occurred while processing this request: ```py\n{type(exc).__name__}: {exc}\n'
             await ctx.send(ms)
+            pass
         else:
             embed.set_thumbnail(url=player.data["thumbnail"])
             fields = [("Music", f"{player.title}", True),
@@ -245,6 +247,15 @@ class Music(commands.Cog):
             if ctx.voice_client.is_playing():
                 await ctx.send(embed=embed, delete_after=10)
             await state.queue.put(player)
+
+    @play.error
+    async def play_error(self, ctx, exc):
+        if isinstance(exc, commands.MissingRequiredArgument):
+            embed = Embed(title=" :x: Missing Argument",
+                          description="The url argument is required. \n Usage: Arif.play <music url or music name>",
+                          colour=ctx.author.colour, timestamp=datetime.datetime.utcnow())
+            await ctx.message.add_reaction("❌")
+            await ctx.send(embed=embed)
 
     @commands.command(name="resume", help="Arif continues stopped music.", aliases=["continue"], pass_context=True)
     async def resume(self, ctx):
