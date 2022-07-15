@@ -109,7 +109,7 @@ class Information(commands.Cog):
                    "play,pause,resume,join,disconnect,nowplaying,skip,loop,lyrics,shuffle,playlist,removequeue,lyrics", True),
                   ("Info:information_source:", "userinfo,Svinfo,avatar,roleinfo,ping", True),
                   ("Log:pencil: ", "setupLogChannel or LogChannelSetup  creates log text channel", True),
-                  ("Game:game_die: ", "Rock-Paper-Scissors,CoinFlip,NumberGuess", "True"),
+                  ("Game:game_die: ", "Rock-Paper-Scissors,CoinFlip,NumberGuess,Bigtext,CoinFlip", "True"),
                   ("Fun:tada:", "Gif", "True"),
                   ("More", "Arif.help 'command name' extented help with specified command.", "True")
 
