@@ -6,6 +6,7 @@ from typing import Optional
 
 import discord
 import requests
+from discord import Embed
 from discord.ext import commands
 from dotenv import load_dotenv, find_dotenv
 
@@ -26,10 +27,7 @@ class Fun(commands.Cog):
             r = requests.get("https://g.tenor.com/v1/search?q=%s&key=%s&limit=%s" % (search_term, tenor_key, lmt))
             if r.status_code == 200:
                 top_8gifts_first = json.loads(r.content)
-                url=str(top_8gifts_first['results'][random.randint(0, 15)]['url'])
-                embed = discord.Embed(title="",description="",colour=discord.colour.Color.random())
-                embed.set_image(url=url)
-                await ctx.send(embed=embed)
+                url=str(top_8gifts_first['results'][random.randint(0, 15)]['itemurl'])
                 await ctx.send(url)
         else:
             word_site = "https://www.mit.edu/~ecprice/wordlist.10000"
@@ -43,14 +41,24 @@ class Fun(commands.Cog):
                 await ctx.send(f"{top_8gifts_first['results'][random.randint(0, 15)]['url']}")
 
     @commands.command(name="Photo", aliases=["photo"])
-    async def SendPhoto(self, ctx, *, filter: Optional[str]):
-        query = filter or ""
+    async def SendPhoto(self, ctx, *, search_term: Optional[str]):
+        query = search_term or None
         if query is not None:
             r = requests.get(f"https://api.unsplash.com/search/photos/?query={query}",
                              headers={'Authorization': f'Client-ID {unsplash_key}'})
             if r.status_code == 200:
                 image = json.loads(r.content)
-                await  ctx.send(image)
+                embed = Embed(title="", description="", colour=discord.colour.Color.random())
+                embed.set_image(url=image["results"][random.randint(0,len(image["results"])-1)]["urls"]["full"])
+                await  ctx.send(embed=embed)
+        else:
+            r = requests.get(f"https://api.unsplash.com/photos/random",
+                             headers={'Authorization': f'Client-ID {unsplash_key}'})
+            if r.status_code == 200:
+                image = json.loads(r.content)
+                embed = Embed(title="", description="", colour=discord.colour.Color.random())
+                embed.set_image(url=image["urls"]["full"])
+                await  ctx.send(embed=embed)
 
 
 def setup(client):
