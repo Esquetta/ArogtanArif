@@ -110,7 +110,7 @@ class Information(commands.Cog):
                   ("Info:information_source:", "userinfo,Svinfo,avatar,roleinfo,ping", True),
                   ("Log:pencil: ", "setupLogChannel or LogChannelSetup  creates log text channel", True),
                   ("Game:game_die: ", "Rock-Paper-Scissors,CoinFlip,NumberGuess,Bigtext,CoinFlip", "True"),
-                  ("Fun:tada:", "Gif", "True"),
+                  ("Fun:tada:", "Gif","Photo", "True"),
                   ("More", "Arif.help 'command name' extented help with specified command.", "True")
 
                   ]
