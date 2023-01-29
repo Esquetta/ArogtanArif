@@ -138,5 +138,5 @@ class Logs(commands.Cog):
         await ctx.send(f"{say}")
 
 
-def setup(client):
-    client.add_cog(Logs(client))
+async def setup(bot):
+   await bot.add_cog(Logs(bot))

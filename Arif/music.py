@@ -128,8 +128,8 @@ class VoiceState:
                     self.current = await self.queue.get()
             except asyncio.TimeoutError:
                 self.queue.clear()
-                self.ctx.voice_client.disconnect()
                 self.destroy(self.guild)
+                await self.ctx.voice_client.disconnect()
                 return
             if not self.loop:
 
@@ -168,7 +168,7 @@ class VoiceState:
                   ]
         for name, value, inline in fields:
             embed.add_field(name=name, value=value, inline=inline)
-        embed.set_footer(text=self.requester.name, icon_url=self.requester.avatar_url)
+        embed.set_footer(text=self.requester.name, icon_url=self.requester.avatar)
         return embed
 
 
@@ -229,7 +229,7 @@ class Music(commands.Cog):
             await ctx.invoke(self.join)
         embed = Embed(title="Added Queue", colour=ctx.guild.owner.colour,
                       timestamp=datetime.datetime.utcnow())
-        embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url)
+        embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar)
         state = self.get_voice_state(ctx)
         try:
             player = await YTDLSource.from_url(url, loop=self.bot.loop)
@@ -447,5 +447,5 @@ class Music(commands.Cog):
         await ctx.send(embed=state.create_embed())
 
 
-def setup(client):
-    client.add_cog(Music(client))
+async def setup(bot):
+   await bot.add_cog(Music(bot))

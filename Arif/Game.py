@@ -123,5 +123,5 @@ class Game(commands.Cog):
         await ctx.send(f":{random.choice(dice)}:")
 
 
-def setup(client):
-    client.add_cog(Game(client))
+async def setup(bot):
+   await bot.add_cog(Game(bot))

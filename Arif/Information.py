@@ -14,7 +14,7 @@ class Information(commands.Cog):
         user = user or ctx.author
         embedInfo = discord.Embed(title="User Information", colour=user.guild.owner.colour,
                                   timestamp=datetime.datetime.utcnow())
-        embedInfo.set_thumbnail(url=user.avatar_url)
+        embedInfo.set_thumbnail(url=user.avatar)
 
         fields = [("ID", user.id, False),
                   ("Username", str(user.mention), True),
@@ -34,14 +34,14 @@ class Information(commands.Cog):
         await  ctx.send(embed=embedInfo)
 
     @commands.command(name="Ping", aliases=["ping"])
-    async def ping(self,ctx):
+    async def ping(self, ctx):
         await ctx.send(f"Pong! {round(ctx.bot.latency * 1000)}ms")
 
     @commands.command(name="SvInfo", help="Shows server info.", aliases=["svinfo"])
     async def server_info(self, ctx):
         embed = discord.Embed(title="Server Information", colour=ctx.guild.owner.colour,
                               timestamp=datetime.datetime.utcnow())
-        embed.set_thumbnail(url=ctx.guild.icon_url)
+        embed.set_thumbnail(url=ctx.guild.icon)
         statuses = [len(list(filter(lambda m: str(m.status) == "online", ctx.guild.members))),
                     len(list(filter(lambda m: str(m.status) == "idle", ctx.guild.members))),
                     len(list(filter(lambda m: str(m.status) == "dnd", ctx.guild.members))),
@@ -50,9 +50,8 @@ class Information(commands.Cog):
         fields = [("ID", ctx.guild.id, True),
                   ("Name", ctx.guild.name, True),
                   ("Owner", ctx.guild.owner.mention, True),
-                  ("Region", ctx.guild.region, True),
                   ("Created at", ctx.guild.created_at.strftime("%d.%m.%Y %H:%M:%S"), True),
-                  ("Members", len(ctx.guild.members), True),
+                  ("Members", ctx.guild.member_count, True),
                   ("Humans", len(list(filter(lambda m: not m.bot, ctx.guild.members))), True),
                   ("Bots", len(list(filter(lambda m: m.bot, ctx.guild.members))), True),
                   ("Banned Users", len(await ctx.guild.bans()), True),
@@ -77,9 +76,9 @@ class Information(commands.Cog):
         embed = Embed(title=f"Avatar For {user.name}", colour=user.guild.owner.colour,
                       timestamp=datetime.datetime.utcnow())
         embed.add_field(name="Links",
-                        value=f"[png]({user.avatar_url_as(format=None, static_format='png')}),[jpeg]({user.avatar_url_as(format=None, static_format='jpeg')}),[webp]({user.avatar_url_as(format=None, static_format='webp')})",
+                        value=f"[png]({user.avatar.with_static_format('png')}),[jpeg]({user.avatar.with_static_format('jpeg')}),[webp]({user.avatar.with_static_format('webp')})",
                         inline=True)
-        embed.set_image(url=user.avatar_url)
+        embed.set_image(url=user.avatar.url)
         await ctx.send(embed=embed)
 
     @commands.command(name="roleinfo", aliases=["roleInfo,RoleInfo,Roleinfo"])
@@ -104,13 +103,14 @@ class Information(commands.Cog):
         embed = Embed(title="Commands ", description="Arif Commands List ", colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
         embed.set_author(name='Help')
-        embed.set_thumbnail(url=self.bot.user.avatar_url)
+        embed.set_thumbnail(url=self.bot.user.avatar)
         fields = [("Music:musical_note: ",
-                   "play,pause,resume,join,disconnect,nowplaying,skip,loop,lyrics,shuffle,playlist,removequeue,lyrics", True),
-                  ("Info:information_source:", "userinfo,Svinfo,avatar,roleinfo,ping", True),
-                  ("Log:pencil: ", "setupLogChannel or LogChannelSetup  creates log text channel", True),
+                   "play,pause,resume,join,disconnect,nowplaying,skip,loop,lyrics,shuffle,playlist,removequeue,lyrics",
+                   "True"),
+                  ("Info:information_source:", "userinfo,Svinfo,avatar,roleinfo,ping", "True"),
+                  ("Log:pencil: ", "setupLogChannel or LogChannelSetup  creates log text channel","True"),
                   ("Game:game_die: ", "Rock-Paper-Scissors,CoinFlip,NumberGuess,Bigtext,CoinFlip", "True"),
-                  ("Fun:tada:", "Gif","Photo", "True"),
+                  ("Fun:tada:", "Gif", "Photo", "True"),
                   ("More", "Arif.help 'command name' extented help with specified command.", "True")
 
                   ]
@@ -226,7 +226,7 @@ class Information(commands.Cog):
         await  ctx.send(embed=embed)
 
     @help.command(name="queue")
-    async def shuffle(self, ctx):
+    async def queue(self, ctx):
         embed = Embed(
             description="**`List of queued songs`**",
             colour=ctx.author.colour,
@@ -238,7 +238,7 @@ class Information(commands.Cog):
         await  ctx.send(embed=embed)
 
     @help.command(name="removefromqueue")
-    async def shuffle(self, ctx):
+    async def removefromqueue(self, ctx):
         embed = Embed(
             description="**`Removes the numbered song from the queue.`**",
             colour=ctx.author.colour,
@@ -259,5 +259,5 @@ class Information(commands.Cog):
         await ctx.send(embed=embed)
 
 
-def setup(client):
-    client.add_cog(Information(client))
+async def setup(bot):
+    await bot.add_cog(Information(bot))
