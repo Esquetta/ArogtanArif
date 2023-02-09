@@ -200,15 +200,21 @@ class Music(commands.Cog):
 
     @commands.command(name="join", help="Arif connects a voice channel.", aliases=["connect"], pass_context=True)
     async def join(self, ctx):
-        if ctx.author.voice is None:
-            await  ctx.send("You must be connected a voice channel for use this command.")
-
 
         voice_channel = ctx.author.voice.channel
         if ctx.voice_client is None:
             await  voice_channel.connect()
         else:
             await  ctx.voice_client.move_to(voice_channel)
+
+    @join.error
+    async def join_error(self, ctx, exc):
+        if isinstance(exc, Exception):
+            embed = Embed(title=" :x: Missing Voice Channel",
+                          description="You must be connected a voice channel.",
+                          colour=ctx.author.colour, timestamp=datetime.datetime.utcnow())
+            await ctx.message.add_reaction("❌")
+            await ctx.send(embed=embed)
 
     @commands.command("disconnect", help="Arif leaves voice channel", aliases=["leave"], pass_context=True)
     async def disconnect(self, ctx):
@@ -223,8 +229,7 @@ class Music(commands.Cog):
 
     @commands.command(name="play", help="Arif plays a music.", aliases=["sing,p"], pass_context=True, no_pm=True)
     async def play(self, ctx, *, url):
-        if ctx.author.voice is None:
-            await  ctx.send("Connect a voice channel.")
+
         if not ctx.voice_client:
             await ctx.invoke(self.join)
         embed = Embed(title="Added Queue", colour=ctx.guild.owner.colour,
@@ -448,4 +453,4 @@ class Music(commands.Cog):
 
 
 async def setup(bot):
-   await bot.add_cog(Music(bot))
+    await bot.add_cog(Music(bot))

@@ -3,6 +3,7 @@ from typing import Optional
 import discord
 from discord import Member, Embed
 from discord.ext import commands
+from discord import app_commands
 
 
 class Information(commands.Cog):
@@ -41,7 +42,7 @@ class Information(commands.Cog):
     async def server_info(self, ctx):
         embed = discord.Embed(title="Server Information", colour=ctx.guild.owner.colour,
                               timestamp=datetime.datetime.utcnow())
-        embed.set_thumbnail(url=ctx.guild.icon)
+        embed.set_thumbnail(url=ctx.guild.icon.url)
         statuses = [len(list(filter(lambda m: str(m.status) == "online", ctx.guild.members))),
                     len(list(filter(lambda m: str(m.status) == "idle", ctx.guild.members))),
                     len(list(filter(lambda m: str(m.status) == "dnd", ctx.guild.members))),
@@ -98,17 +99,17 @@ class Information(commands.Cog):
             embed.add_field(name=name, value=value, inline=inline)
         await ctx.send(embed=embed)
 
-    @commands.group(invoke_without_command=True)
+    @commands.group(name="help", aliases=["Help"], invoke_without_command=True)
     async def help(self, ctx):
         embed = Embed(title="Commands ", description="Arif Commands List ", colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
         embed.set_author(name='Help')
-        embed.set_thumbnail(url=self.bot.user.avatar)
+        embed.set_thumbnail(url=self.bot.user.avatar.url)
         fields = [("Music:musical_note: ",
                    "play,pause,resume,join,disconnect,nowplaying,skip,loop,lyrics,shuffle,playlist,removequeue,lyrics",
                    "True"),
                   ("Info:information_source:", "userinfo,Svinfo,avatar,roleinfo,ping", "True"),
-                  ("Log:pencil: ", "setupLogChannel or LogChannelSetup  creates log text channel","True"),
+                  ("Log:pencil: ", "setupLogChannel or LogChannelSetup  creates log text channel", "True"),
                   ("Game:game_die: ", "Rock-Paper-Scissors,CoinFlip,NumberGuess,Bigtext,CoinFlip", "True"),
                   ("Fun:tada:", "Gif", "Photo", "True"),
                   ("More", "Arif.help 'command name' extented help with specified command.", "True")
