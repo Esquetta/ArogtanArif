@@ -200,21 +200,22 @@ class Music(commands.Cog):
 
     @commands.command(name="join", help="Arif connects a voice channel.", aliases=["connect"], pass_context=True)
     async def join(self, ctx):
-
-        voice_channel = ctx.author.voice.channel
-        if ctx.voice_client is None:
-            await  voice_channel.connect()
-        else:
-            await  ctx.voice_client.move_to(voice_channel)
-
-    @join.error
-    async def join_error(self, ctx, exc):
-        if isinstance(exc, Exception):
+        if ctx.author.voice is None:
             embed = Embed(title=" :x: Missing Voice Channel",
                           description="You must be connected a voice channel.",
                           colour=ctx.author.colour, timestamp=datetime.datetime.utcnow())
             await ctx.message.add_reaction("❌")
             await ctx.send(embed=embed)
+        else:
+            voice_channel = ctx.author.voice.channel
+            if ctx.voice_client is None:
+                await  voice_channel.connect()
+            else:
+                await  ctx.voice_client.move_to(voice_channel)
+
+
+
+
 
     @commands.command("disconnect", help="Arif leaves voice channel", aliases=["leave"], pass_context=True)
     async def disconnect(self, ctx):
