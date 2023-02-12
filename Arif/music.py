@@ -198,14 +198,14 @@ class Music(commands.Cog):
                 await voice.disconnect()
                 await channel.channels[0].send("Disconnected from channel because of inactivity.")
 
-    @commands.command(name="join", help="Arif connects a voice channel.", aliases=["connect"], pass_context=True)
+    @commands.hybrid_command(name="join", help="Arif connects a voice channel.", with_app_command=True)
     async def join(self, ctx):
         if ctx.author.voice is None:
             embed = Embed(title=" :x: Missing Voice Channel",
                           description="You must be connected a voice channel.",
                           colour=ctx.author.colour, timestamp=datetime.datetime.utcnow())
             await ctx.message.add_reaction("❌")
-            await ctx.send(embed=embed)
+            await ctx.send(embed=embed, ephemeral=True)
         else:
             voice_channel = ctx.author.voice.channel
             if ctx.voice_client is None:
@@ -213,24 +213,28 @@ class Music(commands.Cog):
             else:
                 await  ctx.voice_client.move_to(voice_channel)
 
+    @join.error
+    async def join_error(self, ctx, exc):
+        if isinstance(exc, discord.errors.NotFound):
+            embed = Embed(title=" :x: Error",
+                          description=f"{exc.text}",
+                          colour=ctx.author.colour, timestamp=datetime.datetime.utcnow())
+            await ctx.message.add_reaction("❌")
+            await ctx.send(embed=embed, ephemeral=True)
 
-
-
-
-    @commands.command("disconnect", help="Arif leaves voice channel", aliases=["leave"], pass_context=True)
+    @commands.hybrid_command("disconnect", help="Arif leaves voice channel", with_app_command=True)
     async def disconnect(self, ctx):
         player = self.get_voice_state(ctx)
         try:
             await  ctx.voice_client.disconnect()
             del self.voice_states[ctx.guild.id]
             player.queue.clear()
-            await  ctx.send("Disconnected!")
+            await  ctx.send("Disconnected!", ephemeral=True)
         except AttributeError:
-            await  ctx.send("I can't disconnect because I'm not connected to an voice channel.")
+            await  ctx.send("I can't disconnect because I'm not connected to an voice channel.", ephemeral=True)
 
-    @commands.command(name="play", help="Arif plays a music.", aliases=["sing,p"], pass_context=True, no_pm=True)
+    @commands.hybrid_command(name="play", help="Arif plays a music from URL or research.", with_app_command=True)
     async def play(self, ctx, *, url):
-
         if not ctx.voice_client:
             await ctx.invoke(self.join)
         embed = Embed(title="Added Queue", colour=ctx.guild.owner.colour,
@@ -241,7 +245,11 @@ class Music(commands.Cog):
             player = await YTDLSource.from_url(url, loop=self.bot.loop)
         except Exception as exc:
             ms = f'An error occurred while processing this request: ```py\n{type(exc).__name__}: {exc}\n'
-            await ctx.send(ms)
+            error_Embed = Embed(title=" :x:Error",
+                                description=f"{ms}.",
+                                colour=ctx.author.colour, timestamp=datetime.datetime.utcnow())
+            await ctx.message.add_reaction("❌")
+            await ctx.send(embed=error_Embed)
             pass
         else:
             embed.set_thumbnail(url=player.data["thumbnail"])
@@ -254,67 +262,57 @@ class Music(commands.Cog):
                 await ctx.send(embed=embed, delete_after=10)
             await state.queue.put(player)
 
-    @play.error
-    async def play_error(self, ctx, exc):
-        if isinstance(exc, commands.MissingRequiredArgument):
-            embed = Embed(title=" :x: Missing Argument",
-                          description="The url argument is required. \n Usage: Arif.play <music url or music name>",
-                          colour=ctx.author.colour, timestamp=datetime.datetime.utcnow())
-            await ctx.message.add_reaction("❌")
-            await ctx.send(embed=embed)
-
-    @commands.command(name="resume", help="Arif continues stopped music.", aliases=["continue"], pass_context=True)
+    @commands.hybrid_command(name="resume", help="Arif continues stopped music.", with_app_command=True)
     async def resume(self, ctx):
         try:
             if ctx.voice_client.is_paused():
-                await ctx.send("In progress. ⏩")
+                await ctx.send("In progress. ⏩", ephemeral=True)
                 await ctx.voice_client.resume()
         except AttributeError:
-            await  ctx.send("There is no paused music so you cant resume it.")
+            await  ctx.send("There is no paused music so you cant resume it.", ephemeral=True)
         except TypeError:
             pass
 
-    @commands.command(name="volume", help="Increase or decrease voice volume.", aliases=["sound"],
-                      invoke_without_command=True)
+    @commands.hybrid_command(name="volume", help="Increase or decrease voice volume.", with_app_command=True)
     async def volume(self, ctx, *, volume: float):
         try:
             player = self.get_voice_state(ctx)
             if ctx.voice_client is None:
-                return await ctx.send("Not connected to a voice channel.")
+                return await ctx.send("Not connected to a voice channel.", ephemeral=True)
             elif not ctx.voice_client.is_playing():
-                return await ctx.send("There no playing music here.")
+                return await ctx.send("There no playing music here.", ephemeral=True)
             if 0 < volume <= 150:
                 if ctx.voice_client.source:
                     ctx.voice_client.source.volume = volume / 100
                     player.volume = volume / 100
 
                 player.volume = volume / 100
-                await ctx.send(f"Changed volume to {int(volume)}%")
+                await ctx.send(f"Changed volume to {int(volume)}%", ephemeral=True)
             else:
-                await ctx.send("Please enter a value between 1 and 150.")
+                await ctx.send("Please enter a value between 1 and 150.", ephemeral=True)
         except TypeError:
-            await ctx.send("You must enter numeric values.")
+            await ctx.send("You must enter numeric values.", ephemeral=True)
 
-    @commands.command(name="Skip", aliases=["skip"])
+    @commands.hybrid_command(name="skip", with_app_command=True, help="Skips the current song.")
     async def skip(self, ctx):
         if ctx.voice_client.is_playing():
             ctx.voice_client.stop()
-            await ctx.send(f'**`{ctx.author.name}`**: Skipped the song!')
+            await ctx.send(f'**`{ctx.author.name}`**: Skipped the song!', ephemeral=True)
         else:
-            await ctx.send('*There is no playing music.*')
+            await ctx.send('*There is no playing music.*', ephemeral=True)
 
-    @commands.command(name="pause", aliases=['Pause'])
+    @commands.hybrid_command(name="pause", with_app_command=True, help="Pauses the music.")
     async def pause(self, ctx):
         if ctx.voice_client.is_playing():
             ctx.voice_client.pause()
-            await ctx.send("Paused ⏹")
+            await ctx.send("Paused ⏹", ephemeral=True)
         else:
-            await ctx.send("There no playing music here.")
+            await ctx.send("There no playing music here.", ephemeral=True)
 
-    @commands.command(name="Queue", aliases=["queue", "playlist"])
+    @commands.hybrid_command(name="queue", with_app_command=True)
     async def queue_info(self, ctx):
         if not ctx.voice_client or not ctx.voice_client.is_connected():
-            return await ctx.send("I'm not connected a voice channel.", delete_after=15)
+            return await ctx.send("I'm not connected a voice channel.", delete_after=15, ephemeral=True)
         player = self.get_voice_state(ctx)
         if player.queue.empty():
             await ctx.message.add_reaction("❌")
@@ -324,58 +322,58 @@ class Music(commands.Cog):
         embed = discord.Embed(title=f'Upcoming - Next {len(player_queue)}', description=fmt,
                               colour=ctx.guild.owner.colour)
 
-        await ctx.send(embed=embed)
+        await ctx.send(embed=embed, ephemeral=True)
 
-    @commands.command(name="history", aliases=["shistory"])
+    @commands.hybrid_command(name="history", with_app_command=True, help="Show played songs history.")
     async def song_history(self, ctx):
         player = self.get_voice_state(ctx)
         if player.song_history.empty():
             await ctx.message.add_reaction("❌")
-            return await ctx.send("There are currently no more played song here.")
+            return await ctx.send("There are currently no more played song here.", ephemeral=True)
         player_queue = list(itertools.islice(player.song_history._queue, 0, 5))
         fmt = '\n'.join(f'**`{item.data["title"]}`**' for item in player_queue)
         embed = discord.Embed(title=f'Recently Played Songs - Played {len(player_queue)}', description=fmt,
                               colour=ctx.guild.owner.colour)
 
-        await ctx.send(embed=embed)
+        await ctx.send(embed=embed, ephemeral=True)
 
-    @commands.command(name="shuffle", aliases=["Shuffle", "mix"])
+    @commands.hybrid_command(name="shuffle", with_app_command=True)
     async def shuffle(self, ctx):
         player = self.get_voice_state(ctx)
         if player.queue.qsize() > 0:
             player.queue.shuffle()
             await ctx.message.add_reaction("✅")
         else:
-            return await ctx.send('Empty queue.')
+            return await ctx.send('Empty queue.', ephemeral=True)
 
-    @commands.command(name="loop")
+    @commands.hybrid_command(name="loop", with_app_command=True)
     async def loop(self, ctx):
         if not ctx.voice_client.is_playing():
             return await ctx.send('Nothing being played at the moment.')
         player = self.get_voice_state(ctx)
         player.loop = not player.loop
         await ctx.message.add_reaction('✅')
-        await ctx.send('Looping a song is now turned ' + ('on' if player.loop else 'off'))
+        await ctx.send('Looping a song is now turned ' + ('on' if player.loop else 'off'), ephemeral=True)
 
-    @commands.command(name="remove")
+    @commands.hybrid_command(name="remove", with_app_command=True)
     async def remove_from_queue(self, ctx, index: int):
         player = self.get_voice_state(ctx)
         if len(player.queue) == 0:
-            return await ctx.send('Empty queue.')
+            return await ctx.send('Empty queue.', ephemeral=True)
         player.queue.remove(index - 1)
         await ctx.message.add_reaction('✅')
 
-    @commands.command(name="Repeat", aliases=["repeat"])
+    @commands.hybrid_command(name="repeat", with_app_command=True)
     async def repeat(self, ctx):
         if not ctx.voice_client.is_playing():
             await ctx.message.add_reaction("❌")
-            return await ctx.send('Nothing being played at the moment.')
+            return await ctx.send('Nothing being played at the moment.', ephemeral=True)
         player = self.get_voice_state(ctx)
         await player.queue.put(player.current)
         await ctx.message.add_reaction('✅')
-        await ctx.send("This song added end of the queue.")
+        await ctx.send("This song added end of the queue.", ephemeral=True)
 
-    @commands.command(name="loop", alises=["Loop"])
+    @commands.hybrid_command(name="loop", with_app_command=True)
     async def loop(self, ctx):
         if not ctx.voice_client.is_playing():
             await ctx.message.add_reaction("❌")
@@ -383,10 +381,11 @@ class Music(commands.Cog):
         player = self.get_voice_state(ctx)
         player.loop = not player.loop
         await ctx.message.add_reaction('✅')
-        await ctx.send("Loop is " + ('on' if player.loop else 'off'))
-        await ctx.send("When you use this command again loop is of.")
+        await ctx.send("Loop is " + ('on' if player.loop else 'off'), ephemeral=True)
+        await ctx.send("When you use this command again loop is of.", ephemeral=True)
 
-    @commands.command(name="lyrics", aliases=["Lyrics"])
+    @commands.hybrid_group(name="lyrics", with_app_command=True,
+                           help="Returns current lyrics,if lyrics lenght higher then 200 characters returns link.")
     async def lyrics(self, ctx, name: Optional[str]):
         player = self.get_voice_state(ctx)
         name = name or player.current.title
@@ -403,14 +402,14 @@ class Music(commands.Cog):
                                       timestamp=datetime.datetime.utcnow())
                 embed.set_thumbnail(url=data['thumbnail']['genius'])
                 embed.set_author(name=data['author'])
-                await ctx.send(embed=embed)
+                await ctx.send(embed=embed, ephemeral=True)
 
     @lyrics.error
     async def lyrics_error(self, ctx, exc):
         if isinstance(exc, AttributeError):
             await ctx.send("Bot plays nothing in this moment.")
 
-    @commands.command(name="playprevious", aliases=["playLast"])
+    @commands.hybrid_command(name="playprevious", with_app_command=True, help="Plays previous song.")
     async def play_previous(self, ctx):
         player = self.get_voice_state(ctx)
         player_queue = []
@@ -425,32 +424,30 @@ class Music(commands.Cog):
             for item in player_queue:
                 await player.queue.put(item)
             await ctx.message.add_reaction('✅')
-
-
         else:
-            await ctx.send('Nothing being played at the moment.')
+            await ctx.send('Nothing being played at the moment.', ephemeral=True)
 
-    @commands.command(name="clearqueue", aliases=["clearQueue"])
+    @commands.hybrid_command(name="clearqueue", with_app_command=True, help="Clears song queue.")
     async def clear_queue(self, ctx):
         player = self.get_voice_state(ctx)
         if player.queue.qsize() > 0:
             player.queue.clear()
-            await ctx.message.reply("Queue successfully cleared.")
+            await ctx.message.reply("Queue successfully cleared.", ephemeral=True)
         else:
-            await ctx.send("Queue is empty now")
+            await ctx.send("Queue is empty now", ephemeral=True)
 
-    @commands.command(name="nowplaying", aliases=["np"])
+    @commands.hybrid_command(name="nowplaying", with_app_command=True, help="Shows current song info.")
     async def now_playing(self, ctx):
         state = self.get_voice_state(ctx)
 
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
 
-        if not ctx.voice_client.is_playing():
+        if ctx.voice_client is None:
             await ctx.message.add_reaction("❌")
             return await ctx.send('Nothing being played at the moment.')
 
-        await ctx.send(embed=state.create_embed())
+        await ctx.send(embed=state.create_embed(), ephemeral=True)
 
 
 async def setup(bot):

@@ -3,14 +3,13 @@ from typing import Optional
 import discord
 from discord import Member, Embed
 from discord.ext import commands
-from discord import app_commands
 
 
 class Information(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="Userinfo", help="Show specified user info. ", aliases=["MemberInfo", "userinfo"])
+    @commands.hybrid_command(name="userinfo", with_app_command=True, help="Show specified user info. ")
     async def user_info(self, ctx, user: Optional[Member]):
         user = user or ctx.author
         embedInfo = discord.Embed(title="User Information", colour=user.guild.owner.colour,
@@ -32,13 +31,13 @@ class Information(commands.Cog):
         for name, value, inline in fields:
             embedInfo.add_field(name=name, value=value, inline=inline)
 
-        await  ctx.send(embed=embedInfo)
+        await  ctx.send(embed=embedInfo, ephemeral=True)
 
-    @commands.command(name="Ping", aliases=["ping"])
+    @commands.hybrid_command(name="ping", with_app_command=True, help="Shows bot latency.")
     async def ping(self, ctx):
-        await ctx.send(f"Pong! {round(ctx.bot.latency * 1000)}ms")
+        await ctx.send(f"Pong! {round(ctx.bot.latency * 1000)}ms", ephemeral=True)
 
-    @commands.command(name="SvInfo", help="Shows server info.", aliases=["svinfo"])
+    @commands.hybrid_command(name="svinfo", with_app_command=True, help="Shows server info.")
     async def server_info(self, ctx):
         embed = discord.Embed(title="Server Information", colour=ctx.guild.owner.colour,
                               timestamp=datetime.datetime.utcnow())
@@ -69,9 +68,9 @@ class Information(commands.Cog):
         for name, value, inline in fields:
             embed.add_field(name=name, value=value, inline=inline)
         embed.add_field(name="Roles", value=",@".join([str(i.name) for i in ctx.guild.roles]))
-        await ctx.send(embed=embed)
+        await ctx.send(embed=embed, ephemeral=True)
 
-    @commands.command(name="avatar", aliases=["Avatar"])
+    @commands.hybrid_command(name="avatar", with_app_command=True, help="Show User Avatar with diffrent format types.")
     async def avatar(self, ctx, user: Optional[Member]):
         user = user or ctx.author
         embed = Embed(title=f"Avatar For {user.name}", colour=user.guild.owner.colour,
@@ -80,9 +79,9 @@ class Information(commands.Cog):
                         value=f"[png]({user.avatar.with_static_format('png')}),[jpeg]({user.avatar.with_static_format('jpeg')}),[webp]({user.avatar.with_static_format('webp')})",
                         inline=True)
         embed.set_image(url=user.avatar.url)
-        await ctx.send(embed=embed)
+        await ctx.send(embed=embed, ephemeral=True)
 
-    @commands.command(name="roleinfo", aliases=["roleInfo,RoleInfo,Roleinfo"])
+    @commands.hybrid_command(name="roleinfo", with_app_command=True, help="Show User roles and role information.")
     async def role_info(self, ctx, *, role: Optional[str]):
         role = role or ctx.author.top_role
         permissions = []
@@ -97,9 +96,9 @@ class Information(commands.Cog):
                   ("Permissions", f"{''.join([i for i in permissions])}", True)]
         for name, value, inline in fields:
             embed.add_field(name=name, value=value, inline=inline)
-        await ctx.send(embed=embed)
+        await ctx.send(embed=embed,ephemeral=True)
 
-    @commands.group(name="help", aliases=["Help"], invoke_without_command=True)
+    @commands.hybrid_group(name="help",with_app_command=True, invoke_without_command=True)
     async def help(self, ctx):
         embed = Embed(title="Commands ", description="Arif Commands List ", colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
@@ -115,7 +114,6 @@ class Information(commands.Cog):
                   ("More", "Arif.help 'command name' extented help with specified command.", "True")
 
                   ]
-
         for name, value, inline in fields:
             embed.add_field(name=name, value=value, inline=inline)
         await  ctx.send(embed=embed)
@@ -166,7 +164,7 @@ class Information(commands.Cog):
                         inline=True)
         await  ctx.send(embed=embed)
 
-    @help.command(name="SvInfo")
+    @help.command(name="svinfo")
     async def sv_Info(self, ctx):
         embed = Embed(description="**`Server information`**", colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
@@ -174,7 +172,7 @@ class Information(commands.Cog):
         embed.add_field(name="**`Usage`**", value="**`Arif.SvInfo or Arif.vInfo`**", inline=True)
         await  ctx.send(embed=embed)
 
-    @help.command(name="setupLogChannel")
+    @help.command(name="setuplogchannel")
     async def setupLogChannel(self, ctx):
         embed = Embed(description="**`SetupLogChannel usage`**", colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
@@ -185,7 +183,7 @@ class Information(commands.Cog):
                         inline=True)
         await  ctx.send(embed=embed)
 
-    @help.command(name="RockPaperScissors")
+    @help.command(name="rockpaperscissors")
     async def RockPaperScissor(self, ctx):
         embed = Embed(description="**`Rock-Paper-Scissors Game`**", colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
@@ -195,7 +193,7 @@ class Information(commands.Cog):
                         inline=True)
         await  ctx.send(embed=embed)
 
-    @help.command(name="lyrics")
+    @help.command(name="lyrics",with_app_command=True,help="Get extended info about lyrics command")
     async def lyrics(self, ctx):
         embed = Embed(
             description="**`Returns current music lyrics if not text length is high.İf  text length is high returns to you lyrics link.`**",
@@ -203,9 +201,9 @@ class Information(commands.Cog):
             timestamp=datetime.datetime.utcnow())
         embed.add_field(name="**`Usage`**", value="**`Arif.lyrics`**", inline=True)
         embed.set_author(name="Lyrics")
-        await  ctx.send(embed=embed)
+        await  ctx.send(embed=embed,ephemeral=True)
 
-    @help.command(name="loop")
+    @help.command(name="loop",with_app_command=True,help="Get extended info about loop command")
     async def loop(self, ctx):
         embed = Embed(
             description="**`Start loop a current music,when used this command second time loop is turned off.`**",
@@ -213,9 +211,9 @@ class Information(commands.Cog):
             timestamp=datetime.datetime.utcnow())
         embed.add_field(name="**`Usage`**", value="**`Arif.loop`**", inline=True)
         embed.set_author(name="Loop")
-        await  ctx.send(embed=embed)
+        await  ctx.send(embed=embed,ephemeral=True)
 
-    @help.command(name="shuffle")
+    @help.command(name="shuffle",with_app_command=True,help="Get extended info about shuffle command")
     async def shuffle(self, ctx):
         embed = Embed(
             description="**`Shuffles the queue if queue not empty.`**",
@@ -224,9 +222,9 @@ class Information(commands.Cog):
         embed.set_author(name="Shuffle")
         embed.add_field(name="**`Usage`**", value="**`Arif.shuffle`**", inline=True)
 
-        await  ctx.send(embed=embed)
+        await  ctx.send(embed=embed,ephemeral=True)
 
-    @help.command(name="queue")
+    @help.command(name="queue",with_app_command=True,help="Get extended info about queue command")
     async def queue(self, ctx):
         embed = Embed(
             description="**`List of queued songs`**",
@@ -234,11 +232,10 @@ class Information(commands.Cog):
             timestamp=datetime.datetime.utcnow())
         embed.set_author(name="Queue")
         embed.add_field(name="**`Usage`**", value="**`Arif.queue`**", inline=True)
-        embed.add_field(name="**`Aliases`**", value="**`Arif.playlist`**", inline=True)
 
-        await  ctx.send(embed=embed)
+        await  ctx.send(embed=embed,ephemeral=True)
 
-    @help.command(name="removefromqueue")
+    @help.command(name="removefromqueue",with_app_command=True,help="Get extended info about removefromqueue command")
     async def removefromqueue(self, ctx):
         embed = Embed(
             description="**`Removes the numbered song from the queue.`**",
@@ -247,9 +244,9 @@ class Information(commands.Cog):
         embed.set_author(name="Remove from Queue")
         embed.add_field(name="**`Usage`**", value="Arif.removequeue <number 1-:infinity:>", inline=True)
 
-        await  ctx.send(embed=embed)
+        await  ctx.send(embed=embed,ephemeral=True)
 
-    @help.command(name="skip")
+    @help.command(name="skip",with_app_command=True,help="Get extended info about skip command")
     async def skip(self, ctx):
         embed = Embed(
             description="**`If there is a next song.Arif skips current song.`**",
@@ -257,7 +254,7 @@ class Information(commands.Cog):
             timestamp=datetime.datetime.utcnow())
         embed.set_author(name="Skip")
         embed.add_field(name="**`Usage`**", value="**`Arif.skip´**", inline=True)
-        await ctx.send(embed=embed)
+        await ctx.send(embed=embed,ephemeral=True)
 
 
 async def setup(bot):

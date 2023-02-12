@@ -20,7 +20,7 @@ class Fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="Gif", aliases=["gif"])
+    @commands.hybrid_command(name="gif", with_app_command=True,help="Sends gif with specific word you give or random.")
     async def sendGif(self, ctx, *, search_term: Optional[str]):
         search_term = search_term or None
         if search_term is not None:
@@ -28,7 +28,7 @@ class Fun(commands.Cog):
             if r.status_code == 200:
                 top_8gifts_first = json.loads(r.content)
                 url=str(top_8gifts_first['results'][random.randint(0, 15)]['itemurl'])
-                await ctx.send(url)
+                await ctx.send(url,ephemeral=True)
         else:
             word_site = "https://www.mit.edu/~ecprice/wordlist.10000"
             response = urllib.request.urlopen(word_site)
@@ -38,9 +38,9 @@ class Fun(commands.Cog):
             r = requests.get("https://g.tenor.com/v1/search?q=%s&key=%s&limit=%s" % (search_term, tenor_key, lmt))
             if r.status_code == 200:
                 top_8gifts_first = json.loads(r.content)
-                await ctx.send(f"{top_8gifts_first['results'][random.randint(0, 15)]['url']}")
+                await ctx.send(f"{top_8gifts_first['results'][random.randint(0, 15)]['url']}",ephemeral=True)
 
-    @commands.command(name="Photo", aliases=["photo"])
+    @commands.hybrid_command(name="photo",with_app_command=True,help="Sends photo with specific word you give or random.")
     async def SendPhoto(self, ctx, *, search_term: Optional[str]):
         query = search_term or None
         if query is not None:
@@ -50,7 +50,7 @@ class Fun(commands.Cog):
                 image = json.loads(r.content)
                 embed = Embed(title="", description="", colour=discord.colour.Color.random())
                 embed.set_image(url=image["results"][random.randint(0,len(image["results"])-1)]["urls"]["full"])
-                await  ctx.send(embed=embed)
+                await  ctx.send(embed=embed,ephemeral=True)
         else:
             r = requests.get(f"https://api.unsplash.com/photos/random",
                              headers={'Authorization': f'Client-ID {unsplash_key}'})
@@ -58,7 +58,7 @@ class Fun(commands.Cog):
                 image = json.loads(r.content)
                 embed = Embed(title="", description="", colour=discord.colour.Color.random())
                 embed.set_image(url=image["urls"]["full"])
-                await  ctx.send(embed=embed)
+                await  ctx.send(embed=embed,ephemeral=True)
 
 
 async def setup(bot):
