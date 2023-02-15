@@ -11,7 +11,7 @@ import discord
 import discord.errors
 import youtube_dl
 from async_timeout import timeout
-from discord import Embed
+from discord import Embed, Interaction
 from discord.ext import commands
 
 youtube_dl.utils.bug_reports_message = lambda: ''
@@ -118,7 +118,10 @@ class VoiceState:
         self.requester = ctx.author
         self.song_history = SongQueue()
 
+
         ctx.bot.loop.create_task(self.audio_player_task())
+
+
 
     async def audio_player_task(self):
         while not self.bot.is_closed():
@@ -135,7 +138,12 @@ class VoiceState:
 
                 self.guild.voice_client.play(self.current,
                                              after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
-                await self.channel.send(embed=self.create_embed(), delete_after=15)
+                await  self.ctx.defer()
+                embed=self.create_embed()
+                await  self.ctx.reply(embed=embed)
+
+
+
             elif self.loop:
                 self.current = discord.FFmpegPCMAudio(self.current.data['url'], **ffmpeg_options)
                 self.guild.voice_client.play(self.current,
@@ -235,6 +243,7 @@ class Music(commands.Cog):
 
     @commands.hybrid_command(name="play", help="Arif plays a music from URL or research.", with_app_command=True)
     async def play(self, ctx, *, url):
+
         if not ctx.voice_client:
             await ctx.invoke(self.join)
         embed = Embed(title="Added Queue", colour=ctx.guild.owner.colour,
@@ -250,6 +259,7 @@ class Music(commands.Cog):
                                 colour=ctx.author.colour, timestamp=datetime.datetime.utcnow())
             await ctx.message.add_reaction("❌")
             await ctx.send(embed=error_Embed)
+
             pass
         else:
             embed.set_thumbnail(url=player.data["thumbnail"])
@@ -260,6 +270,7 @@ class Music(commands.Cog):
                 embed.add_field(name=name, value=value, inline=inline)
             if ctx.voice_client.is_playing():
                 await ctx.send(embed=embed, delete_after=10)
+
             await state.queue.put(player)
 
     @commands.hybrid_command(name="resume", help="Arif continues stopped music.", with_app_command=True)
