@@ -3,6 +3,7 @@ from typing import Optional
 import discord
 from discord import Member, Embed
 from discord.ext import commands
+from discord.ui import Button, View
 
 
 class Information(commands.Cog):
@@ -12,6 +13,7 @@ class Information(commands.Cog):
     @commands.hybrid_command(name="userinfo", with_app_command=True, help="Show specified user info. ")
     async def user_info(self, ctx, user: Optional[Member]):
         user = user or ctx.author
+        view = View()
         embedInfo = discord.Embed(title="User Information", colour=user.guild.owner.colour,
                                   timestamp=datetime.datetime.utcnow())
         embedInfo.set_thumbnail(url=user.avatar)
@@ -30,8 +32,10 @@ class Information(commands.Cog):
 
         for name, value, inline in fields:
             embedInfo.add_field(name=name, value=value, inline=inline)
-
-        await  ctx.send(embed=embedInfo, ephemeral=True)
+        test_button = Button(style=discord.ButtonStyle.link, label="Test",
+                             url="https://www.google.com")
+        view.add_item(test_button)
+        await  ctx.send(embed=embedInfo, view=view, ephemeral=True)
 
     @commands.hybrid_command(name="ping", with_app_command=True, help="Shows bot latency.")
     async def ping(self, ctx):
@@ -96,9 +100,9 @@ class Information(commands.Cog):
                   ("Permissions", f"{''.join([i for i in permissions])}", True)]
         for name, value, inline in fields:
             embed.add_field(name=name, value=value, inline=inline)
-        await ctx.send(embed=embed,ephemeral=True)
+        await ctx.send(embed=embed, ephemeral=True)
 
-    @commands.hybrid_group(name="help",with_app_command=True, invoke_without_command=True)
+    @commands.hybrid_group(name="help", with_app_command=True, invoke_without_command=True)
     async def help(self, ctx):
         embed = Embed(title="Commands ", description="Arif Commands List ", colour=ctx.author.colour,
                       timestamp=datetime.datetime.utcnow())
@@ -116,6 +120,7 @@ class Information(commands.Cog):
                   ]
         for name, value, inline in fields:
             embed.add_field(name=name, value=value, inline=inline)
+
         await  ctx.send(embed=embed)
 
     @help.command(name="play")
@@ -193,7 +198,7 @@ class Information(commands.Cog):
                         inline=True)
         await  ctx.send(embed=embed)
 
-    @help.command(name="lyrics",with_app_command=True,help="Get extended info about lyrics command")
+    @help.command(name="lyrics", with_app_command=True, help="Get extended info about lyrics command")
     async def lyrics(self, ctx):
         embed = Embed(
             description="**`Returns current music lyrics if not text length is high.İf  text length is high returns to you lyrics link.`**",
@@ -201,9 +206,9 @@ class Information(commands.Cog):
             timestamp=datetime.datetime.utcnow())
         embed.add_field(name="**`Usage`**", value="**`Arif.lyrics`**", inline=True)
         embed.set_author(name="Lyrics")
-        await  ctx.send(embed=embed,ephemeral=True)
+        await  ctx.send(embed=embed, ephemeral=True)
 
-    @help.command(name="loop",with_app_command=True,help="Get extended info about loop command")
+    @help.command(name="loop", with_app_command=True, help="Get extended info about loop command")
     async def loop(self, ctx):
         embed = Embed(
             description="**`Start loop a current music,when used this command second time loop is turned off.`**",
@@ -211,9 +216,9 @@ class Information(commands.Cog):
             timestamp=datetime.datetime.utcnow())
         embed.add_field(name="**`Usage`**", value="**`Arif.loop`**", inline=True)
         embed.set_author(name="Loop")
-        await  ctx.send(embed=embed,ephemeral=True)
+        await  ctx.send(embed=embed, ephemeral=True)
 
-    @help.command(name="shuffle",with_app_command=True,help="Get extended info about shuffle command")
+    @help.command(name="shuffle", with_app_command=True, help="Get extended info about shuffle command")
     async def shuffle(self, ctx):
         embed = Embed(
             description="**`Shuffles the queue if queue not empty.`**",
@@ -222,9 +227,9 @@ class Information(commands.Cog):
         embed.set_author(name="Shuffle")
         embed.add_field(name="**`Usage`**", value="**`Arif.shuffle`**", inline=True)
 
-        await  ctx.send(embed=embed,ephemeral=True)
+        await  ctx.send(embed=embed, ephemeral=True)
 
-    @help.command(name="queue",with_app_command=True,help="Get extended info about queue command")
+    @help.command(name="queue", with_app_command=True, help="Get extended info about queue command")
     async def queue(self, ctx):
         embed = Embed(
             description="**`List of queued songs`**",
@@ -233,9 +238,9 @@ class Information(commands.Cog):
         embed.set_author(name="Queue")
         embed.add_field(name="**`Usage`**", value="**`Arif.queue`**", inline=True)
 
-        await  ctx.send(embed=embed,ephemeral=True)
+        await  ctx.send(embed=embed, ephemeral=True)
 
-    @help.command(name="removefromqueue",with_app_command=True,help="Get extended info about removefromqueue command")
+    @help.command(name="removefromqueue", with_app_command=True, help="Get extended info about removefromqueue command")
     async def removefromqueue(self, ctx):
         embed = Embed(
             description="**`Removes the numbered song from the queue.`**",
@@ -244,9 +249,9 @@ class Information(commands.Cog):
         embed.set_author(name="Remove from Queue")
         embed.add_field(name="**`Usage`**", value="Arif.removequeue <number 1-:infinity:>", inline=True)
 
-        await  ctx.send(embed=embed,ephemeral=True)
+        await  ctx.send(embed=embed, ephemeral=True)
 
-    @help.command(name="skip",with_app_command=True,help="Get extended info about skip command")
+    @help.command(name="skip", with_app_command=True, help="Get extended info about skip command")
     async def skip(self, ctx):
         embed = Embed(
             description="**`If there is a next song.Arif skips current song.`**",
@@ -254,7 +259,7 @@ class Information(commands.Cog):
             timestamp=datetime.datetime.utcnow())
         embed.set_author(name="Skip")
         embed.add_field(name="**`Usage`**", value="**`Arif.skip´**", inline=True)
-        await ctx.send(embed=embed,ephemeral=True)
+        await ctx.send(embed=embed, ephemeral=True)
 
 
 async def setup(bot):

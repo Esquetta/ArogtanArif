@@ -15,7 +15,7 @@ class Chat(commands.Cog):
 
         async  with ctx.typing():
             response = openai.Completion.create(model="text-davinci-003", prompt=question, temperature=0,
-                                                max_tokens=300)
+                                                max_tokens=500)
             await  asyncio.sleep(60)
 
         await  ctx.send(response.choices[0].text, ephemeral=True)
