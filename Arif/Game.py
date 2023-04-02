@@ -4,9 +4,51 @@ import datetime
 import discord
 from discord import Embed
 from discord.ext import commands
+from discord import Interaction
+from discord.ui import View, Button
 import random
 
 choices = ["Rock", "Paper", "Scissors"]
+
+
+class GameButtons(discord.ui.View):
+    def __init__(self, *, timeout=180):
+        super().__init__(timeout=timeout)
+        self.bot_Choice = random.choice(choices)
+
+    @discord.ui.button(style=discord.ButtonStyle.grey, label="🪨", custom_id="btn_Rock")
+    async def RockButton(self, interaction: Interaction, button: Button):
+        if "Rock" == self.bot_Choice:
+            await  interaction.response.send_message("Draw! GG", ephemeral=True)
+        else:
+            if self.bot_Choice == "Paper":
+                await interaction.response.send_message("I picked 📄, You lost :) GG!", ephemeral=True)
+            else:
+                await  interaction.response.send_message("I picked ✂️,You win GG!", ephemeral=True)
+
+        button.disabled = true
+
+    @discord.ui.button(style=discord.ButtonStyle.grey, label="📄", custom_id="btn_Paper")
+    async def PaperButton(self, interaction: Interaction, button: Button):
+        if "Paper" == self.bot_Choice:
+            await  interaction.response.send_message("Draw! GG", ephemeral=True)
+        else:
+            if self.bot_Choice == "Scissors":
+                await interaction.response.send_message("I picked ✂️, You lost :) GG!", ephemeral=True)
+            else:
+                await  interaction.response.send_message("I picked 📄,You win GG!", ephemeral=True)
+        button.disabled = true
+
+    @discord.ui.button(style=discord.ButtonStyle.grey, label="✂️", custom_id="btn_Scissors")
+    async def ScissorsButton(self, interaction: Interaction, button: Button):
+        if "Scissors" == self.bot_Choice:
+            await  interaction.response.send_message("Draw! GG", ephemeral=True)
+        else:
+            if self.bot_Choice == "Rock":
+                await interaction.response.send_message("I picked 🪨, You lost :) GG!", ephemeral=True)
+            else:
+                await  interaction.response.send_message("I picked 📄,You win GG!", ephemeral=True)
+        button.disabled = true
 
 
 class Game(commands.Cog):
@@ -14,33 +56,8 @@ class Game(commands.Cog):
         self.bot = bot
 
     @commands.hybrid_command(name="rockpaperscissors", with_app_command=True, help="Starts Rock-Paper-Scissors game.")
-    async def Rock_Paper_Scissors(self, ctx, choice: str):
-        bot_choice = random.choice(choices)
-        await  ctx.send(f"My choice {bot_choice} ")
-        user_choice = choice.capitalize()
-        if not user_choice.isdigit():
-            if user_choice in choices:
-                if user_choice == bot_choice:
-                    await  ctx.send("Draw! GG", ephemeral=True)
-                elif user_choice == "Rock":
-                    if bot_choice == "Paper":
-                        await ctx.send("You lost :)! GG", ephemeral=True)
-                    else:
-                        await ctx.send("You win -_- ! GG", ephemeral=True)
-                elif user_choice == "Paper":
-                    if bot_choice == "Rock":
-                        await ctx.send("You win -_-! GG", ephemeral=True)
-                    else:
-                        await ctx.send("You lost :)! GG", ephemeral=True)
-                elif user_choice == "Scissors":
-                    if bot_choice == "Rock":
-                        await ctx.send("You lost :)! GG", ephemeral=True)
-                    else:
-                        await ctx.send("You win -_-! GG", ephemeral=True)
-            else:
-                await ctx.send("You must chose Rock-Paper-Scissors.", ephemeral=True)
-        else:
-            await ctx.send("You must chose Rock-Paper-Scissors.", ephemeral=True)
+    async def Rock_Paper_Scissors(self, ctx):
+        await  ctx.send("Pick one", view=GameButtons(), ephemeral=True)
 
     @commands.hybrid_command(name="coinflip", with_app_command=True, help="Flip's a coin.")
     async def CoinFlip(self, ctx):

@@ -13,7 +13,7 @@ class Information(commands.Cog):
     @commands.hybrid_command(name="userinfo", with_app_command=True, help="Show specified user info. ")
     async def user_info(self, ctx, user: Optional[Member]):
         user = user or ctx.author
-        view = View()
+
         embedInfo = discord.Embed(title="User Information", colour=user.guild.owner.colour,
                                   timestamp=datetime.datetime.utcnow())
         embedInfo.set_thumbnail(url=user.avatar)
@@ -32,10 +32,7 @@ class Information(commands.Cog):
 
         for name, value, inline in fields:
             embedInfo.add_field(name=name, value=value, inline=inline)
-        test_button = Button(style=discord.ButtonStyle.link, label="Test",
-                             url="https://www.google.com")
-        view.add_item(test_button)
-        await  ctx.send(embed=embedInfo, view=view, ephemeral=True)
+        await  ctx.send(embed=embedInfo,ephemeral=True)
 
     @commands.hybrid_command(name="ping", with_app_command=True, help="Shows bot latency.")
     async def ping(self, ctx):
@@ -122,6 +119,7 @@ class Information(commands.Cog):
             embed.add_field(name=name, value=value, inline=inline)
 
         await  ctx.send(embed=embed)
+
 
     @help.command(name="play")
     async def play(self, ctx):

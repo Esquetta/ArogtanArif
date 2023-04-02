@@ -284,7 +284,7 @@ class Music(commands.Cog):
         except TypeError:
             pass
 
-    @commands.hybrid_command(name="volume", help="Increase or decrease voice volume.", with_app_command=True)
+    @commands.hybrid_command(name="volume", help="Increase or decrease voice volume between 1-150.", with_app_command=True)
     async def volume(self, ctx, *, volume: float):
         try:
             player = self.get_voice_state(ctx)
