@@ -11,7 +11,7 @@ import random
 choices = ["Rock", "Paper", "Scissors"]
 
 
-class GameButtons(discord.ui.View):
+class RockPaperScissorsButtons(discord.ui.View):
     def __init__(self, *, timeout=180):
         super().__init__(timeout=timeout)
         self.bot_Choice = random.choice(choices)
@@ -26,7 +26,7 @@ class GameButtons(discord.ui.View):
             else:
                 await  interaction.response.send_message("I picked ✂️,You win GG!", ephemeral=True)
 
-        button.disabled = true
+        button.disabled = True
 
     @discord.ui.button(style=discord.ButtonStyle.grey, label="📄", custom_id="btn_Paper")
     async def PaperButton(self, interaction: Interaction, button: Button):
@@ -37,7 +37,7 @@ class GameButtons(discord.ui.View):
                 await interaction.response.send_message("I picked ✂️, You lost :) GG!", ephemeral=True)
             else:
                 await  interaction.response.send_message("I picked 📄,You win GG!", ephemeral=True)
-        button.disabled = true
+        button.disabled = True
 
     @discord.ui.button(style=discord.ButtonStyle.grey, label="✂️", custom_id="btn_Scissors")
     async def ScissorsButton(self, interaction: Interaction, button: Button):
@@ -48,8 +48,7 @@ class GameButtons(discord.ui.View):
                 await interaction.response.send_message("I picked 🪨, You lost :) GG!", ephemeral=True)
             else:
                 await  interaction.response.send_message("I picked 📄,You win GG!", ephemeral=True)
-        button.disabled = true
-
+        button.disabled = True
 
 class Game(commands.Cog):
     def __init__(self, bot):
@@ -57,7 +56,7 @@ class Game(commands.Cog):
 
     @commands.hybrid_command(name="rockpaperscissors", with_app_command=True, help="Starts Rock-Paper-Scissors game.")
     async def Rock_Paper_Scissors(self, ctx):
-        await  ctx.send("Pick one", view=GameButtons(), ephemeral=True)
+        await  ctx.send("Pick one", view=RockPaperScissorsButtons(), ephemeral=True)
 
     @commands.hybrid_command(name="coinflip", with_app_command=True, help="Flip's a coin.")
     async def CoinFlip(self, ctx):
