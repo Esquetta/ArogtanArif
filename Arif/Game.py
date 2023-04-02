@@ -50,6 +50,7 @@ class RockPaperScissorsButtons(discord.ui.View):
                 await  interaction.response.send_message("I picked 📄,You win GG!", ephemeral=True)
         button.disabled = True
 
+
 class Game(commands.Cog):
     def __init__(self, bot):
         self.bot = bot

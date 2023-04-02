@@ -27,11 +27,11 @@ ytdl_format_options = {
     'quiet': True,
     'no_warnings': True,
     'default_search': 'auto',
-    'source_address': '0.0.0.0'  # bind to ipv4 since ipv6 addresses cause issues sometimes
+    'source_address': '0.0.0.0',  # bind to ipv4 since ipv6 addresses cause issues sometimes
 }
 
 ffmpeg_options = {
-    'options': '-vn'
+    'options': '-vn',
 }
 
 ytdl = youtube_dl.YoutubeDL(ytdl_format_options)  # Downloads  music  to our given options
@@ -118,10 +118,7 @@ class VoiceState:
         self.requester = ctx.author
         self.song_history = SongQueue()
 
-
         ctx.bot.loop.create_task(self.audio_player_task())
-
-
 
     async def audio_player_task(self):
         while not self.bot.is_closed():
@@ -135,15 +132,11 @@ class VoiceState:
                 await self.ctx.voice_client.disconnect()
                 return
             if not self.loop:
-
                 self.guild.voice_client.play(self.current,
                                              after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
-                await  self.ctx.defer()
-                embed=self.create_embed()
-                await  self.ctx.reply(embed=embed)
-
-
-
+                await self.ctx.defer()
+                embed = self.create_embed()
+                await self.ctx.reply(embed=embed)
             elif self.loop:
                 self.current = discord.FFmpegPCMAudio(self.current.data['url'], **ffmpeg_options)
                 self.guild.voice_client.play(self.current,
@@ -218,6 +211,7 @@ class Music(commands.Cog):
             voice_channel = ctx.author.voice.channel
             if ctx.voice_client is None:
                 await  voice_channel.connect()
+                await ctx.send("Connected", ephemeral=True)
             else:
                 await  ctx.voice_client.move_to(voice_channel)
 
@@ -228,7 +222,7 @@ class Music(commands.Cog):
                           description=f"{exc.text}",
                           colour=ctx.author.colour, timestamp=datetime.datetime.utcnow())
             await ctx.message.add_reaction("❌")
-            await ctx.send(embed=embed, ephemeral=True)
+            await ctx.send(embed=embed, ephemeral=True, delete_after=3)
 
     @commands.hybrid_command("disconnect", help="Arif leaves voice channel", with_app_command=True)
     async def disconnect(self, ctx):
@@ -284,7 +278,8 @@ class Music(commands.Cog):
         except TypeError:
             pass
 
-    @commands.hybrid_command(name="volume", help="Increase or decrease voice volume between 1-150.", with_app_command=True)
+    @commands.hybrid_command(name="volume", help="Increase or decrease voice volume between 1-150.",
+                             with_app_command=True)
     async def volume(self, ctx, *, volume: float):
         try:
             player = self.get_voice_state(ctx)
@@ -449,14 +444,9 @@ class Music(commands.Cog):
 
     @commands.hybrid_command(name="nowplaying", with_app_command=True, help="Shows current song info.")
     async def now_playing(self, ctx):
-        state = self.get_voice_state(ctx)
-
-        def check(m: discord.Message):
-            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-
+        state = self.get_voice_state(ctx)    
         if ctx.voice_client is None:
-            await ctx.message.add_reaction("❌")
-            return await ctx.send('Nothing being played at the moment.')
+            return await ctx.send('Nothing being played at the moment.',ephemeral=True)
 
         await ctx.send(embed=state.create_embed(), ephemeral=True)
 
