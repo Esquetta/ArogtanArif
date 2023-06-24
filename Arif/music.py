@@ -29,6 +29,7 @@ ytdl_format_options = {
     'default_search': 'auto',
     'source_address': '0.0.0.0',  # bind to ipv4 since ipv6 addresses cause issues sometimes
 }
+'''Youtube dl not working right now , music command is off.'''
 
 ffmpeg_options = {
     'options': '-vn',
