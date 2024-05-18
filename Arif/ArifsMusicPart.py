@@ -16,7 +16,7 @@ from dotenv import load_dotenv, find_dotenv
 
 load_dotenv(find_dotenv())
 token = os.getenv('DISCORD_TOKEN')
-openai.api_key = os.getenv('OPEN_AI_KEY')
+openai.api_key = os.getenv('OPENAI_API_KEY')
 prefix = "Arif."
 OWNER_IDS = [276761363022479361]
 cogs = [music, Information, Game, Fun, Chat]
