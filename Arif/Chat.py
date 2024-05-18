@@ -16,7 +16,7 @@ class Chat(commands.Cog):
     async def Chat(self, ctx, *, question: str):
         try:
             async with ctx.typing():
-                response = openai.completions.create(model='gpt-4o',
+                response = openai.chat.completions.create(model='gpt-4o',
                                                      messages=[{'role': 'user', 'content': question}],
                                                      max_tokens=150)
                 await  asyncio.sleep(1)
