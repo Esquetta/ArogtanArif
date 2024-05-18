@@ -10,15 +10,20 @@ class Chat(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="chat", with_app_command=True, help="Ask any question to Arif,it could may take a few minitues to answer.", pass_context=True)
+    @commands.hybrid_command(name="chat", with_app_command=True,
+                             help="Ask any question to Arif,it could may take a few minitues to answer.",
+                             pass_context=True)
     async def Chat(self, ctx, *, question: str):
+        try:
+            async with ctx.typing():
+                response = openai.completions.create(model='gpt-4o',
+                                                     messages=[{'role': 'user', 'content': question}],
+                                                     max_tokens=150)
+                await  asyncio.sleep(1)
+                await  ctx.send(response.choices[0].message.content, ephemeral=True)
 
-        async  with ctx.typing():
-            response = openai.Completion.create(model="text-davinci-003", prompt=question, temperature=0,
-                                                max_tokens=500)
-            await  asyncio.sleep(60)
-
-        await  ctx.send(response.choices[0].text, ephemeral=True)
+        except Exception as e:
+            await ctx.send(f"An error accured {e}")
 
 
 async def setup(bot):
